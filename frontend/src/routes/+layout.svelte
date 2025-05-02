@@ -5,8 +5,8 @@
 	let { children } = $props();
 </script>
 
-<div class="grid h-screen grid-rows-[auto_1fr_auto] mx-4 xl-landscape:mx-16">
-	<header class=" min-h-20 flex justify-between items-center">
+<div class="grid h-screen grid-rows-[auto_1fr_auto] w-full">
+	<header class="border-b-2 border-surface-500 min-h-20 flex justify-between items-center px-4 xl-landscape:px-16">
 		<div class="flex items-center h-full">
 			<a class="text-surface-500 me-6 text-3xl font-bold hover:brightness-80 lora-700" href="/">
 				<span class="text-primary-400">two</span><span class="text-surface-500">-</span><span class="text-secondary-400">players</span>.org
@@ -53,7 +53,7 @@
 				</section>
 			</nav>
 		</div>
-		<a aria-label="github repository" href="/">
+		<a aria-label="github repository" href="https://github.com/DCCXXV/two-players.org">
 			<svg
 				class="w-10 h-10 transition transform duration-200 ease-in-out hover:-translate-y-1"
 				viewBox="0 0 1024 1024"
@@ -71,13 +71,13 @@
 		</a>
 	</header>
 
-	<div class="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] mt-4">
+	<div class="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] mt-4 w-full px-4 xl-landscape:px-16">
 		<!-- Sidebar (Left)
 		<aside class="bg-surface-900">
 			<p></p>
 		</aside>
 		-->
-		<main>
+		<main class="w-full">
 			{@render children()}
 		</main>
 		<!-- Sidebar (Right)
@@ -89,3 +89,7 @@
 
 	<footer class="p-8"></footer>
 </div>
+
+<style>
+
+</style>
