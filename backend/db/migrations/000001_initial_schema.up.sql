@@ -1,6 +1,0 @@
-CREATE TABLE rooms (
-    id UUID PRIMARY KEY,
-    game_type VARCHAR(50) NOT NULL,
-    is_private BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);

@@ -28,7 +28,7 @@
 <div class="bg-surface-900 rounded-md p-4 m-2 min-w-120">
 	<form class="flex flex-col gap-4" onsubmit={handleCreateRoom}>
         <label class="me-2" for="roomName">Room's name: </label>
-        <input name="roomName" class="input" type="text" placeholder="Name of the room" />
+        <input name="roomName" class="input text-2xl bg-surface-800 text-primary-500 lora-700" type="text" placeholder="Name of the room" />
 		<div class="flex items-center justify-between">
             <div class="flex">
                 <label class="me-4" for="private">Private room: </label>

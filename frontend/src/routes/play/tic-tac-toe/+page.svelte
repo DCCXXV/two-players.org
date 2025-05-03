@@ -12,7 +12,7 @@
 <ol class="flex items-center gap-4">
     <li><a class="opacity-60 hover:underline" href="/play">Play</a></li>
     <li class="opacity-50" aria-hidden="true">&rsaquo;</li>
-    <li><a class="text-primary-400 hover:underline" href="/tic-tac-toe">Tic-Tac-Toe</a></li>
+    <li><a class="text-primary-400 hover:underline" href="/play/tic-tac-toe">Tic-Tac-Toe</a></li>
 </ol>
 
 <h3 class="h3 lora-700 text-surface-200 my-4">Create a room</h3>

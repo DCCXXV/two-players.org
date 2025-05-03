@@ -1,2 +1,0 @@
-ALTER TABLE rooms
-ADD COLUMN name VARCHAR(100);
