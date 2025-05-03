@@ -1,4 +1,4 @@
-name: Deploy Go Backend (ARM) to Hetzner VPS
+name: Deploy Go Backend (ARM) to Hetzner
 
 on:
   push:
@@ -16,10 +16,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
-
-      # - name: Run Go Tests
-      #   run: go test ./...
+          go-version: "1.23.8"
 
       - name: Build Go application for Linux ARM64
         env:
@@ -27,29 +24,63 @@ jobs:
           GOARCH: arm64
         run: |
           echo "Building for $GOOS/$GOARCH..."
-          go build -v -o ${{ secrets.BINARY_NAME }} ./backend/cmd/server/main
+          go build -v -o ${{ secrets.BINARY_NAME }} ./backend/cmd/server/
 
-      - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            echo "Connecting to ${{ secrets.VPS_HOST }} as ${{ secrets.VPS_USER }}..."
+          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
 
-            TARGET_PATH="${{ secrets.VPS_DEPLOY_PATH }}/${{ secrets.BINARY_NAME }}"
-            echo "Target path on VPS: ${TARGET_PATH}"
+      - name: Deploy Files, Run Migrations, and Restart Service
+        env:
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+          BINARY_NAME: ${{ secrets.BINARY_NAME }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
+        run: |
+          MIGRATIONS_LOCAL_PATH="./backend/db/migrate"
 
-            ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "mkdir -p ${{ secrets.VPS_DEPLOY_PATH }}"
+          # Define paths on the VPS
+          DEPLOY_PATH="${VPS_DEPLOY_PATH}"
+          BINARY_VPS_PATH="${DEPLOY_PATH}/${BINARY_NAME}"
+          MIGRATIONS_DIR_NAME="migrations"
+          MIGRATIONS_VPS_PATH="${DEPLOY_PATH}/${MIGRATIONS_DIR_NAME}"
+          VPS_TARGET="${VPS_USER}@${VPS_HOST}"
+          MIGRATE_CMD="/usr/local/bin/migrate"
 
-            echo "Copying binary..."
-            scp -o StrictHostKeyChecking=no ./${{ secrets.BINARY_NAME }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${TARGET_PATH}
+          echo "Ensuring remote directories exist..."
+          ssh -o StrictHostKeyChecking=no ${VPS_TARGET} "mkdir -p ${DEPLOY_PATH} && mkdir -p ${MIGRATIONS_VPS_PATH}"
 
-            echo "Restarting service (${{ secrets.SERVICE_NAME }})..."
-            ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "sudo systemctl restart ${{ secrets.SERVICE_NAME }}"
+          echo "Copying binary to ${BINARY_VPS_PATH}..."
+          scp -o StrictHostKeyChecking=no ./${BINARY_NAME} ${VPS_TARGET}:${BINARY_VPS_PATH}
 
-            echo "Deployment successful!"
+          echo "Copying migrations from ${MIGRATIONS_LOCAL_PATH} to ${MIGRATIONS_VPS_PATH}..."
+          scp -r -o StrictHostKeyChecking=no ${MIGRATIONS_LOCAL_PATH}/* ${VPS_TARGET}:${MIGRATIONS_VPS_PATH}/
 
+          echo "Running commands remotely on ${VPS_TARGET}..."
+          ssh -o StrictHostKeyChecking=no ${VPS_TARGET} "
+            echo 'Running database migrations...'
+            # Export the DATABASE_URL for the migrate command
+            export DATABASE_URL='${DATABASE_URL}'
+            if [ -z \"\$DATABASE_URL\" ]; then
+              echo 'Error: DATABASE_URL secret is not set or empty!'
+              exit 1
+            fi
+            echo \"Using migration path: ${MIGRATIONS_VPS_PATH}\"
+            ${MIGRATE_CMD} -database \"\$DATABASE_URL\" -path ${MIGRATIONS_VPS_PATH} up
+            if [ \$? -ne 0 ]; then
+              echo 'Error: Database migration failed!'
+              exit 1
+            fi
 
+            echo 'Restarting service (${SERVICE_NAME})...'
+            sudo systemctl restart ${SERVICE_NAME}
+            if [ \$? -ne 0 ]; then
+              echo 'Error: Failed to restart service ${SERVICE_NAME}!'
+              exit 1
+            fi
+
+            echo 'Deployment successful!'
+          "
