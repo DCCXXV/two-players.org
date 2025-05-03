@@ -33,7 +33,6 @@ jobs:
           ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
 
       - name: Deploy Files, Run Migrations, and Restart Service
-        working-directory: ./backend
         env:
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -42,7 +41,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
         run: |
-          MIGRATIONS_LOCAL_PATH="./db/migrate"
+          MIGRATIONS_LOCAL_PATH="./backend/db/migrate"
 
           # Define paths on the VPS
           DEPLOY_PATH="${VPS_DEPLOY_PATH}"
