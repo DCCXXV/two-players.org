@@ -54,8 +54,17 @@ jobs:
           echo "Ensuring remote directories exist..."
           ssh -o StrictHostKeyChecking=no ${VPS_TARGET} "mkdir -p ${DEPLOY_PATH} && mkdir -p ${MIGRATIONS_VPS_PATH}"
 
+          echo "Listing files in current directory (${PWD}):"
+          ls -la
+
           echo "Copying binary to ${BINARY_VPS_PATH}..."
-          scp -o StrictHostKeyChecking=no ./${BINARY_NAME} ${VPS_TARGET}:${BINARY_VPS_PATH}
+          # Check if the specific binary file exists before attempting scp
+          if [ -f "./${BINARY_NAME}" ]; then
+            scp -o StrictHostKeyChecking=no ./${BINARY_NAME} ${VPS_TARGET}:${BINARY_VPS_PATH}
+          else
+            echo "Error: Local binary file ./${BINARY_NAME} not found!"
+            exit 1
+          fi
 
           echo "Copying migrations from ${MIGRATIONS_LOCAL_PATH} to ${MIGRATIONS_VPS_PATH}..."
           scp -r -o StrictHostKeyChecking=no ${MIGRATIONS_LOCAL_PATH}/* ${VPS_TARGET}:${MIGRATIONS_VPS_PATH}/
