@@ -24,8 +24,29 @@ jobs:
           GOOS: linux
           GOARCH: arm64
         run: |
+          echo "Current directory: ${PWD}"
+          echo "BINARY_NAME secret is: '${{ secrets.BINARY_NAME }}'"
+
+          echo "Listing parent directory (repo root) BEFORE build:"
+          ls -la ..
+
           echo "Building for $GOOS/$GOARCH..."
-          go build -v -o ${{ secrets.BINARY_NAME }} ./cmd/server/
+          go build -v -o ../${{ secrets.BINARY_NAME }} ./cmd/server/
+          BUILD_EXIT_CODE=$? # Capture exit code of go build
+
+          echo "go build command finished with exit code: ${BUILD_EXIT_CODE}"
+
+          echo "Listing current directory (${PWD}) AFTER build:"
+          ls -la .
+
+          echo "Listing parent directory (repo root) AFTER build:"
+          ls -la ..
+          echo "--- End Build Step Debug ---"
+
+          if [ ${BUILD_EXIT_CODE} -ne 0 ]; then
+            echo "Go build failed!"
+            exit ${BUILD_EXIT_CODE}
+          fi
 
       - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
