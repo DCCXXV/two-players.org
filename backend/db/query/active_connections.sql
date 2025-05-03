@@ -23,6 +23,12 @@ WHERE
     display_name = $1
 RETURNING *;
 
+-- name: UpdateActiveConnectionName :execrows
+UPDATE active_connections
+SET display_name = $1
+WHERE display_name = $2
+RETURNING display_name;
+
 -- name: UpdateConnectionLastSeen :exec
 -- Updates the last_seen timestamp for a connection (heartbeat).
 UPDATE active_connections
@@ -50,3 +56,6 @@ ORDER BY display_name;
 -- Finds connections that haven't been seen recently (for cleanup).
 SELECT display_name FROM active_connections
 WHERE last_seen < $1; -- $1 would be a timestamp like NOW() - INTERVAL '5 minutes'
+
+DELETE FROM active_connections
+WHERE display_name = $1;

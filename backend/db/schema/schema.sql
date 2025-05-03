@@ -37,7 +37,6 @@ CREATE INDEX idx_active_connections_last_seen ON active_connections(last_seen);
 CREATE INDEX idx_active_connections_status ON active_connections(status);
 CREATE INDEX idx_active_connections_current_room_id ON active_connections(current_room_id) WHERE current_room_id IS NOT NULL;
 
-
 -- -----------------------------------------------------
 -- Table `players`
 -- Links an active connection (user) to a specific room, assigning their role (player order).
@@ -58,7 +57,8 @@ CREATE TABLE players (
     CONSTRAINT fk_active_connection
         FOREIGN KEY(player_display_name)
         REFERENCES active_connections(display_name)
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
 
     UNIQUE (room_id, player_order),
     UNIQUE (player_display_name)

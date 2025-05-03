@@ -1,5 +1,12 @@
 <script lang="ts">
+    // Temp
+    import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
+    const targetUrl = '/play/tic-tac-toe'; 
 
+    onMount(() => {
+        goto(targetUrl, { replaceState: true }); 
+    });
 </script>
 
 <section class="w-full">

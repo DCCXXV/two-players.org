@@ -4,7 +4,7 @@
 </script>
 
 <section class="w-full mt-4">
-	<h1 class="lora-700 text-surface-200 h1 mb-6">Current games</h1>
+	<h1 class="lora-700 text-surface-200 h2 mb-6">Current games</h1>
 
 	<a
 		href="/play/tic-tac-toe"

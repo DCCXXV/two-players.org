@@ -2,10 +2,8 @@ package main
 
 import (
 	"log"
-	"net/http" // Needed for splitting origins
-	"time"     // Needed for CORS MaxAge
+	"net/http"
 
-	// Adjust import paths based on your go.mod module name
 	db "github.com/DCCXXV/twoplayers/backend/db/sqlc"
 	"github.com/DCCXXV/twoplayers/backend/internal/config"
 	"github.com/DCCXXV/twoplayers/backend/internal/database"
@@ -13,10 +11,49 @@ import (
 	"github.com/DCCXXV/twoplayers/backend/internal/realtime"
 	"github.com/DCCXXV/twoplayers/backend/internal/service"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	// socketio "github.com/googollee/go-socket.io" // Keep if needed by realtime pkg
 )
+
+func ManualCorsMiddleware(allowedOrigins []string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
+		allowed := false
+		if origin == "" {
+			allowed = true
+		} else {
+			for _, allowedOrigin := range allowedOrigins {
+				if origin == allowedOrigin {
+					allowed = true
+					break
+				}
+			}
+		}
+
+		if allowed {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")                                                                                                                                 // Ajusta según necesites
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, Content-Length, X-CSRF-Token, Token, session, Origin, Host, Connection, Accept-Encoding, Accept-Language, X-Requested-With") // Cabeceras permitidas
+		} else {
+			log.Printf("WARN: Manual CORS Middleware: Denied origin: %s", origin)
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+
+		if c.Request.Method == http.MethodOptions {
+			log.Printf("DEBUG: Manual CORS Middleware: Handling OPTIONS request for origin: %s", origin)
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		if allowed {
+			c.Request.Header.Del("Origin")
+			log.Printf("DEBUG: Manual CORS Middleware: Deleted Origin header before passing to next handler.")
+		}
+
+		c.Next()
+	}
+}
 
 func main() {
 	// 1. Load Configuration
@@ -38,58 +75,33 @@ func main() {
 	// 4. Initialize Services
 	roomService := service.NewRoomService(queries)
 	connectionService := service.NewConnectionService(queries)
-	playerService := service.NewPlayerService(queries)
+	//playerService := service.NewPlayerService(queries)
 
 	// 5. Initialize Realtime Manager
-	rtManager, err := realtime.NewManager(connectionService, playerService, roomService)
+	rtManager, err := realtime.NewManager(cfg, connectionService /* , other services */)
 	if err != nil {
 		log.Fatalf("FATAL: Failed to initialize realtime manager: %v", err)
 	}
-	go rtManager.RunCleanupTask()
 
 	// 6. Initialize Gin Router
 	router := gin.Default()
 
-	corsConfig := cors.Config{
-		AllowOrigins:     cfg.AllowedOrigins,
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}
-	router.Use(cors.New(corsConfig))
+	router.Use(ManualCorsMiddleware(cfg.AllowedOrigins))
 
 	// 7. Setup Handlers
 	httpHandler := handlers.NewHTTPHandler(roomService)
+	wsHandler := handlers.NewWebSocketHandler(rtManager)
 
 	// 8. Register Routes
 	apiV1 := router.Group("/api/v1")
 	{
 		apiV1.POST("/rooms", httpHandler.CreateRoom)
 		apiV1.GET("/rooms/:roomId", httpHandler.GetRoom)
-		apiV1.DELETE("/rooms", httpHandler.ListPublicRooms)
+		apiV1.DELETE("/rooms", httpHandler.DeleteRoom)
 		apiV1.GET("/rooms", httpHandler.ListPublicRooms)
 	}
 
-	socketIOServer := rtManager.GetServer()
-
-	socketIOServer.SetAllowOriginFunc(func(r *http.Request) bool {
-		origin := r.Header.Get("Origin")
-		for _, allowed := range cfg.AllowedOrigins {
-			if origin == allowed {
-				return true
-			}
-		}
-		log.Printf("CORS check failed for Socket.IO origin: %s", origin)
-		return false
-	})
-
-	socketIORoute := router.Group("/socket.io")
-	{
-		socketIORoute.GET("/*any", gin.WrapH(socketIOServer))
-		socketIORoute.POST("/*any", gin.WrapH(socketIOServer))
-	}
+	router.GET("/ws", wsHandler.HandleConnection)
 
 	// 9. Start Server
 	log.Printf("Server starting on port %s", cfg.ServerPort)

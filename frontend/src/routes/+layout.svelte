@@ -1,6 +1,23 @@
 <script lang="ts">
 	import '../app.css';
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
+	import {
+		connectWebSocket,
+		disconnectWebSocket,
+		isConnected,
+		displayName
+	} from '$lib/socketStore';
+
+onMount(() => {
+		console.log('Layout onMount: Attempting to call connectWebSocket...');
+		connectWebSocket();
+
+		return () => {
+			console.log('Layout onDestroy: Calling disconnectWebSocket');
+			disconnectWebSocket();
+		};
+	});
 
 	let { children } = $props();
 </script>
@@ -21,12 +38,12 @@
 			<nav class="text-surface-200 flex h-full justify-center gap-2 text-lg">
 				<section
 					class="flex h-full flex-col justify-center px-2"
-					class:border-b-3={page.url.pathname === '/play'}
-					class:border-primary-400={page.url.pathname === '/play'}
+					class:border-b-3={page.url.pathname.startsWith('/play')}
+					class:border-primary-400={page.url.pathname.startsWith('/play')}
 				>
 					<a
 						class="hover:text-primary-100 transition-colors duration-200"
-						class:text-primary-400={page.url.pathname === '/play'}
+						class:text-primary-400={page.url.pathname.startsWith('/play')}
 						href="/play"
 					>
 						PLAY
@@ -40,7 +57,7 @@
 					<a
 						class="hover:text-primary-100 transition-colors duration-200"
 						class:text-primary-400={page.url.pathname === '/explore'}
-						href="/explore"
+						href="#"
 					>
 						EXPLORE
 					</a>
@@ -53,7 +70,7 @@
 					<a
 						class="hover:text-primary-100 transition-colors duration-200"
 						class:text-primary-400={page.url.pathname === '/learn'}
-						href="/learn"
+						href="#"
 					>
 						LEARN
 					</a>
@@ -61,7 +78,12 @@
 			</nav>
 		</div>
 		<div class="flex gap-6">
-			<button class="btn preset-filled-surface-500 text-surface-100"> Set Display Name </button>
+			<!--<button class="btn preset-filled-surface-500 text-surface-100"> Change Display Name </button>-->
+			{#if $isConnected && $displayName}
+				<input type="text" readonly class="input text-xl text-primary-400 bg-surface-900 max-w-35 text-center lora-400" value={$displayName}>
+			{:else if $isConnected}
+				<span class="text-xl text-primary-400">Loading...</span>
+			{/if}
 			<a aria-label="github repository" href="https://github.com/DCCXXV/two-players.org">
 				<svg
 					class="h-10 w-10 transform transition duration-200 ease-in-out hover:-translate-y-1"

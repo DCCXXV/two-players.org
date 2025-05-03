@@ -120,6 +120,26 @@ func (q *Queries) ListActiveLobbyUsers(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
+const updateActiveConnectionName = `-- name: UpdateActiveConnectionName :execrows
+UPDATE active_connections
+SET display_name = $1
+WHERE display_name = $2
+RETURNING display_name
+`
+
+type UpdateActiveConnectionNameParams struct {
+	DisplayName   string `json:"display_name"`
+	DisplayName_2 string `json:"display_name_2"`
+}
+
+func (q *Queries) UpdateActiveConnectionName(ctx context.Context, arg UpdateActiveConnectionNameParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateActiveConnectionName, arg.DisplayName, arg.DisplayName_2)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const updateConnectionLastSeen = `-- name: UpdateConnectionLastSeen :exec
 UPDATE active_connections
 SET last_seen = NOW()

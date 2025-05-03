@@ -39,6 +39,7 @@ type Querier interface {
 	ListPublicRooms(ctx context.Context) ([]Room, error)
 	// Retrieve all public rooms for a specific game type.
 	ListRoomsByGameType(ctx context.Context, gameType string) ([]Room, error)
+	UpdateActiveConnectionName(ctx context.Context, arg UpdateActiveConnectionNameParams) (int64, error)
 	// Updates the last_seen timestamp for a connection (heartbeat).
 	UpdateConnectionLastSeen(ctx context.Context, displayName string) error
 	// Updates the status and current_room_id for an active connection.
