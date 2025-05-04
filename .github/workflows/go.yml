@@ -17,6 +17,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.23.8"
+          cache: true
 
       - name: Build Go application for Linux ARM64
         working-directory: ./backend
@@ -24,13 +25,17 @@ jobs:
           GOOS: linux
           GOARCH: arm64
         run: |
+          echo "--- Build Step Debug ---"
           echo "Current directory: ${PWD}"
+          echo "BINARY_NAME variable is: '${{ vars.BINARY_NAME }}'"
 
           echo "Listing parent directory (repo root) BEFORE build:"
           ls -la ..
 
           echo "Building for $GOOS/$GOARCH..."
-          go build -v ./cmd/server/
+          # Build the package located in ./cmd/server/ (relative to ./backend)
+          # Output the binary to ../ (repository root) named according to the variable
+          go build -v -o ../${{ vars.BINARY_NAME }} ./cmd/server/
           BUILD_EXIT_CODE=$?
 
           echo "go build command finished with exit code: ${BUILD_EXIT_CODE}"
@@ -42,6 +47,7 @@ jobs:
           ls -la ..
           echo "--- End Build Step Debug ---"
 
+          # Explicitly check the build exit code
           if [ ${BUILD_EXIT_CODE} -ne 0 ]; then
             echo "Go build failed!"
             exit ${BUILD_EXIT_CODE}
@@ -57,37 +63,64 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+          BINARY_NAME: ${{ vars.BINARY_NAME }} 
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
         run: |
+          # --- Define Variables ---
           MIGRATIONS_LOCAL_PATH="./backend/db/migrate"
+          BINARY_LOCAL_PATH="./${BINARY_NAME}"
 
           # Define paths on the VPS
           DEPLOY_PATH="${VPS_DEPLOY_PATH}"
-          BINARY_VPS_PATH="${DEPLOY_PATH}/server"
+          BINARY_VPS_PATH="${DEPLOY_PATH}/${BINARY_NAME}"
           MIGRATIONS_DIR_NAME="migrations"
           MIGRATIONS_VPS_PATH="${DEPLOY_PATH}/${MIGRATIONS_DIR_NAME}"
           VPS_TARGET="${VPS_USER}@${VPS_HOST}"
           MIGRATE_CMD="/usr/local/bin/migrate"
 
-          echo "Ensuring remote directories exist..."
+          # --- Prepare Remote Directories ---
+          echo "Ensuring remote directories exist on ${VPS_TARGET}..."
+          # Use ssh (via ssh-agent) to create directories
           ssh -o StrictHostKeyChecking=no ${VPS_TARGET} "mkdir -p ${DEPLOY_PATH} && mkdir -p ${MIGRATIONS_VPS_PATH}"
 
-          echo "Listing files in current directory (${PWD}):"
+          # --- List files in repo root for debugging ---
+          echo "Listing files in repo root (${PWD}) before copy:"
           ls -la
 
-          echo "Copying binary to ${BINARY_VPS_PATH}..."
-          # Check if the specific binary file exists before attempting scp
+          # --- Copy Files ---
+          echo "Copying binary from ${BINARY_LOCAL_PATH} to ${VPS_TARGET}:${BINARY_VPS_PATH}..."
+          # Check if the specific binary file exists at the expected local path
+          if [ -f "${BINARY_LOCAL_PATH}" ]; then
+            scp -o StrictHostKeyChecking=no ${BINARY_LOCAL_PATH} ${VPS_TARGET}:${BINARY_VPS_PATH}
+            if [ $? -ne 0 ]; then
+              echo "Error: scp command failed for binary!"
+              exit 1
+            fi
+            echo "Binary copy successful."
+          else
+            echo "Error: Local binary file ${BINARY_LOCAL_PATH} not found!"
+            exit 1
+          fi
 
-          scp -o StrictHostKeyChecking=no ./server ${VPS_TARGET}:${BINARY_VPS_PATH}
+          echo "Copying migrations from ${MIGRATIONS_LOCAL_PATH} to ${VPS_TARGET}:${MIGRATIONS_VPS_PATH}..."
+          # Check if the local migrations path exists before attempting scp
+          if [ -d "${MIGRATIONS_LOCAL_PATH}" ]; then
+            scp -r -o StrictHostKeyChecking=no ${MIGRATIONS_LOCAL_PATH}/* ${VPS_TARGET}:${MIGRATIONS_VPS_PATH}/
+            if [ $? -ne 0 ]; then
+              echo "Error: scp command failed for migrations!"
+              exit 1
+            fi
+            echo "Migrations copy successful."
+          else
+            echo "Error: Local migrations path ${MIGRATIONS_LOCAL_PATH} not found!"
+            exit 1
+          fi
 
-          echo "Copying migrations from ${MIGRATIONS_LOCAL_PATH} to ${MIGRATIONS_VPS_PATH}..."
-          scp -r -o StrictHostKeyChecking=no ${MIGRATIONS_LOCAL_PATH}/* ${VPS_TARGET}:${MIGRATIONS_VPS_PATH}/
-
+          # --- Run Migrations and Restart Service Remotely ---
           echo "Running commands remotely on ${VPS_TARGET}..."
           ssh -o StrictHostKeyChecking=no ${VPS_TARGET} "
             echo 'Running database migrations...'
-            # Export the DATABASE_URL for the migrate command
             export DATABASE_URL='${DATABASE_URL}'
             if [ -z \"\$DATABASE_URL\" ]; then
               echo 'Error: DATABASE_URL secret is not set or empty!'
@@ -99,6 +132,7 @@ jobs:
               echo 'Error: Database migration failed!'
               exit 1
             fi
+            echo 'Migrations applied successfully.'
 
             echo 'Restarting service (${SERVICE_NAME})...'
             sudo systemctl restart ${SERVICE_NAME}
@@ -106,6 +140,7 @@ jobs:
               echo 'Error: Failed to restart service ${SERVICE_NAME}!'
               exit 1
             fi
+            echo 'Service restarted successfully.'
 
             echo 'Deployment successful!'
           "
