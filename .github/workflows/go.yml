@@ -23,16 +23,17 @@ jobs:
         env:
           GOOS: linux
           GOARCH: arm64
+          BINARY_NAME: ${{ vars.BINARY_NAME }}
         run: |
           echo "Current directory: ${PWD}"
-          echo "BINARY_NAME secret is: '${{ secrets.BINARY_NAME }}'"
+          echo "BINARY_NAME secret is: '${{ vars.BINARY_NAME }}'"
 
           echo "Listing parent directory (repo root) BEFORE build:"
           ls -la ..
 
           echo "Building for $GOOS/$GOARCH..."
-          go build -v -o ../${{ secrets.BINARY_NAME }} ./cmd/server/
-          BUILD_EXIT_CODE=$? # Capture exit code of go build
+          go build -v -o ../${{ vars.BINARY_NAME }} ./cmd/server/
+          BUILD_EXIT_CODE=$?
 
           echo "go build command finished with exit code: ${BUILD_EXIT_CODE}"
 
