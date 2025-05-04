@@ -66,20 +66,3 @@ CREATE TABLE players (
 
 CREATE INDEX idx_players_room_id ON players(room_id);
 CREATE INDEX idx_players_player_display_name ON players(player_display_name);
-
--- -----------------------------------------------------
--- USERS
--- -----------------------------------------------------
-/*
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    last_login TIMESTAMP WITH TIME ZONE
-);
-
--- ALTER TABLE active_connections ADD COLUMN user_id UUID NULL;
--- ALTER TABLE active_connections ADD CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL;
-*/
