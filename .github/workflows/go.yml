@@ -23,16 +23,14 @@ jobs:
         env:
           GOOS: linux
           GOARCH: arm64
-          BINARY_NAME: ${{ vars.BINARY_NAME }}
         run: |
           echo "Current directory: ${PWD}"
-          echo "BINARY_NAME secret is: '${{ vars.BINARY_NAME }}'"
 
           echo "Listing parent directory (repo root) BEFORE build:"
           ls -la ..
 
           echo "Building for $GOOS/$GOARCH..."
-          go build -v -o ../${{ vars.BINARY_NAME }} ./cmd/server/
+          go build -v ./cmd/server/
           BUILD_EXIT_CODE=$?
 
           echo "go build command finished with exit code: ${BUILD_EXIT_CODE}"
@@ -59,7 +57,6 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
-          BINARY_NAME: ${{ secrets.BINARY_NAME }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
         run: |
@@ -67,7 +64,7 @@ jobs:
 
           # Define paths on the VPS
           DEPLOY_PATH="${VPS_DEPLOY_PATH}"
-          BINARY_VPS_PATH="${DEPLOY_PATH}/${BINARY_NAME}"
+          BINARY_VPS_PATH="${DEPLOY_PATH}/server"
           MIGRATIONS_DIR_NAME="migrations"
           MIGRATIONS_VPS_PATH="${DEPLOY_PATH}/${MIGRATIONS_DIR_NAME}"
           VPS_TARGET="${VPS_USER}@${VPS_HOST}"
@@ -81,12 +78,8 @@ jobs:
 
           echo "Copying binary to ${BINARY_VPS_PATH}..."
           # Check if the specific binary file exists before attempting scp
-          if [ -f "./${BINARY_NAME}" ]; then
-            scp -o StrictHostKeyChecking=no ./${BINARY_NAME} ${VPS_TARGET}:${BINARY_VPS_PATH}
-          else
-            echo "Error: Local binary file ./${BINARY_NAME} not found!"
-            exit 1
-          fi
+
+          scp -o StrictHostKeyChecking=no ./server ${VPS_TARGET}:${BINARY_VPS_PATH}
 
           echo "Copying migrations from ${MIGRATIONS_LOCAL_PATH} to ${MIGRATIONS_VPS_PATH}..."
           scp -r -o StrictHostKeyChecking=no ${MIGRATIONS_LOCAL_PATH}/* ${VPS_TARGET}:${MIGRATIONS_VPS_PATH}/
