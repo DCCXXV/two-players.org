@@ -31,18 +31,34 @@ type Client struct {
 type Manager struct {
 	config            *config.Config
 	connectionService service.ConnectionService
-	// roomService service.RoomService
-	// playerService service.PlayerService
 
 	upgrader websocket.Upgrader
 
 	mu           sync.RWMutex
 	clients      map[uuid.UUID]*Client
 	nameToClient map[string]*Client
-	rooms        map[uuid.UUID]map[uuid.UUID]*Client // roomID -> {clientID -> Client}
+	rooms        map[uuid.UUID]*Room
 }
 
-func NewManager(cfg *config.Config, cs service.ConnectionService /* otros servicios */) (*Manager, error) {
+type GameInstance interface {
+	HandleMessage(clientID uuid.UUID, messageType string, payload json.RawMessage) error
+	AddPlayer(client *Client) error
+	RemovePlayer(clientID uuid.UUID) error
+	GetStateForPlayer(clientID uuid.UUID) interface{}
+}
+
+type Room struct {
+	ID       uuid.UUID
+	Name     string
+	GameType string
+	Clients  map[uuid.UUID]*Client
+	HostID   uuid.UUID
+	Game     GameInstance
+	manager  *Manager
+	mu       sync.RWMutex
+}
+
+func NewManager(cfg *config.Config, cs service.ConnectionService, rm service.RoomService, pl service.PlayerService) (*Manager, error) {
 	m := &Manager{
 		config:            cfg,
 		connectionService: cs,

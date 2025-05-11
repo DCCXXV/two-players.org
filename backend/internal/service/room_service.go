@@ -38,6 +38,7 @@ func (s *roomService) CreateRoom(ctx context.Context, params CreateRoomParams) (
 	log.Printf("Service: Attempting to create room with GameType=%s", params.GameType)
 
 	dbParams := db.CreateRoomParams{
+		Name:        params.Name,
 		GameType:    params.GameType,
 		IsPrivate:   params.IsPrivate,
 		GameOptions: params.GameOptions,

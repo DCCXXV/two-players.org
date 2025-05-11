@@ -60,6 +60,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
           SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
+          GIN_MODE: release
         run: |
           # --- Define Variables ---
           MIGRATIONS_LOCAL_PATH="./backend/db/migrate"

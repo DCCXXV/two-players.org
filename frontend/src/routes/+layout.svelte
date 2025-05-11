@@ -24,18 +24,18 @@ onMount(() => {
 
 <div class="grid h-screen w-full grid-rows-[auto_1fr_auto]">
 	<header
-		class="border-surface-500 xl-landscape:px-16 flex min-h-20 items-center justify-between border-b-2 px-4"
+		class="border-surface-500 xl-landscape:px-16 flex min-h-14 items-center justify-between border-b-2 px-4"
 	>
 		<div class="flex h-full items-center">
 			<a
-				class="text-surface-500 hover:brightness-80 lora-700 me-6 pb-2 text-3xl font-bold"
+				class="text-surface-500 hover:brightness-80 lora-700 me-6 pb-2 text-2xl font-bold"
 				href="/"
 			>
 				<span class="text-primary-400">two</span><span class="text-surface-500">-</span><span
 					class="text-secondary-400">players</span
 				>.org
 			</a>
-			<nav class="text-surface-200 flex h-full justify-center gap-2 text-lg">
+			<nav class="text-surface-200 flex h-full justify-center gap-2">
 				<section
 					class="flex h-full flex-col justify-center px-2"
 					class:border-b-3={page.url.pathname.startsWith('/play')}
@@ -57,7 +57,7 @@ onMount(() => {
 					<a
 						class="hover:text-primary-100 transition-colors duration-200"
 						class:text-primary-400={page.url.pathname === '/explore'}
-						href="#"
+						href="/play"
 					>
 						EXPLORE
 					</a>
@@ -70,7 +70,7 @@ onMount(() => {
 					<a
 						class="hover:text-primary-100 transition-colors duration-200"
 						class:text-primary-400={page.url.pathname === '/learn'}
-						href="#"
+						href="/play"
 					>
 						LEARN
 					</a>
@@ -80,13 +80,14 @@ onMount(() => {
 		<div class="flex gap-6">
 			<!--<button class="btn preset-filled-surface-500 text-surface-100"> Change Display Name </button>-->
 			{#if $isConnected && $displayName}
-				<input type="text" readonly class="input text-xl text-primary-400 bg-surface-900 max-w-35 text-center lora-400" value={$displayName}>
+				<input type="text" readonly class="input text-lg text-primary-400 bg-surface-900 max-w-35 text-center lora-400 rounded-none" value={$displayName}>
 			{:else if $isConnected}
 				<span class="text-xl text-primary-400">Loading...</span>
 			{/if}
+			<!--
 			<a aria-label="github repository" href="https://github.com/DCCXXV/two-players.org">
 				<svg
-					class="h-10 w-10 transform transition duration-200 ease-in-out hover:-translate-y-1"
+					class="h-7 w-7 transform transition duration-200 ease-in-out hover:-translate-y-1 pt-1"
 					viewBox="0 0 1024 1024"
 					fill="none"
 					xmlns="http://www.w3.org/2000/svg"
@@ -100,25 +101,14 @@ onMount(() => {
 					/>
 				</svg>
 			</a>
+			-->
 		</div>
 	</header>
-
-	<div class="xl-landscape:px-16 mt-4 grid w-full grid-cols-1 px-4 md:grid-cols-[auto_1fr_auto]">
-		<!-- Sidebar (Left)
-		<aside class="bg-surface-900">
-			<p></p>
-		</aside>
-		-->
+	<div class="xl-landscape:px-16 mt-4 w-full px-4">
 		<main class="w-full">
 			{@render children()}
 		</main>
-		<!-- Sidebar (Right)
-		<aside class="bg-surface-900">
-			<p></p>
-		</aside>
-		-->
 	</div>
-
 	<footer class="p-8"></footer>
 </div>
 

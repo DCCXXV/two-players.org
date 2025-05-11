@@ -3,11 +3,13 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	db "github.com/DCCXXV/twoplayers/backend/db/sqlc"
 	"github.com/DCCXXV/twoplayers/backend/internal/config"
 	"github.com/DCCXXV/twoplayers/backend/internal/database"
 	"github.com/DCCXXV/twoplayers/backend/internal/handlers"
+	appLogger "github.com/DCCXXV/twoplayers/backend/internal/logger"
 	"github.com/DCCXXV/twoplayers/backend/internal/realtime"
 	"github.com/DCCXXV/twoplayers/backend/internal/service"
 
@@ -56,16 +58,21 @@ func ManualCorsMiddleware(allowedOrigins []string) gin.HandlerFunc {
 }
 
 func main() {
+	appLogger.Init()
+	log := appLogger.Get()
+
 	// 1. Load Configuration
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("FATAL: Failed to load configuration: %v", err)
+		log.Error("FATAL: Failed to load configuration", "error", err)
+		os.Exit(1)
 	}
 
 	// 2. Establish Database Connection
 	pool, err := database.NewDatabaseConnection(cfg)
 	if err != nil {
-		log.Fatalf("FATAL: Failed to connect to database: %v", err)
+		log.Error("FATAL: Failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 	defer pool.Close()
 
@@ -75,12 +82,13 @@ func main() {
 	// 4. Initialize Services
 	roomService := service.NewRoomService(queries)
 	connectionService := service.NewConnectionService(queries)
-	//playerService := service.NewPlayerService(queries)
+	playerService := service.NewPlayerService(queries)
 
 	// 5. Initialize Realtime Manager
-	rtManager, err := realtime.NewManager(cfg, connectionService /* , other services */)
+	rtManager, err := realtime.NewManager(cfg, connectionService, roomService, playerService)
 	if err != nil {
-		log.Fatalf("FATAL: Failed to initialize realtime manager: %v", err)
+		log.Error("FATAL: Failed to initialize realtime manager", "error", err)
+		os.Exit(1)
 	}
 
 	// 6. Initialize Gin Router
@@ -97,20 +105,21 @@ func main() {
 	{
 		apiV1.POST("/rooms", httpHandler.CreateRoom)
 		apiV1.GET("/rooms/:roomId", httpHandler.GetRoom)
-		apiV1.DELETE("/rooms", httpHandler.DeleteRoom)
 		apiV1.GET("/rooms", httpHandler.ListPublicRooms)
+		apiV1.DELETE("/rooms", httpHandler.DeleteRoom)
 	}
 
 	router.GET("/ws", wsHandler.HandleConnection)
 
 	// 9. Start Server
-	log.Printf("Server starting on port %s", cfg.ServerPort)
+	log.Info("Server starting on port", "port", cfg.ServerPort)
 	server := &http.Server{
 		Addr:    cfg.ServerPort,
 		Handler: router,
 	}
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		log.Fatalf("FATAL: Server failed to start: %v", err)
+		log.Error("FATAL: Server failed to start", "error", err)
+		os.Exit(1)
 	}
 }

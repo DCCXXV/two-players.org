@@ -56,6 +56,3 @@ ORDER BY display_name;
 -- Finds connections that haven't been seen recently (for cleanup).
 SELECT display_name FROM active_connections
 WHERE last_seen < $1; -- $1 would be a timestamp like NOW() - INTERVAL '5 minutes'
-
-DELETE FROM active_connections
-WHERE display_name = $1;
