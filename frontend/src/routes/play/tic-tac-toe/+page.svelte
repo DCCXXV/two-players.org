@@ -25,7 +25,7 @@
 		console.log('Initial state isLoadingRooms=true, errorLoadingRooms=null');
 		try {
 			console.log('Trying to fetch /api/v1/rooms...');
-			const response = await fetch('/api/v1/rooms');
+			const response = await fetch(import.meta.env.VITE_SOCKET_URL + '/api/v1/rooms');
 			console.log('Response received:', {
 				ok: response.ok,
 				status: response.status,
@@ -57,7 +57,7 @@
 	async function handleRoomCreation(options: { Name: string; GameType: string; IsPrivate: boolean; }) {
 		isCreatingRoom = true;
 		try {
-			const response = await fetch('/api/v1/rooms', {
+			const response = await fetch(import.meta.env.VITE_SOCKET_URL + '/api/v1/rooms', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
