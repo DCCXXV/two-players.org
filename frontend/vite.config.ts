@@ -3,12 +3,14 @@ import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
+const httpBackendUrl: string = process.env.VITE_SOCKET_URL || 'http://localhost:8080';
+
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	server: {
 		proxy: {
 			'/api': {
-				target: 'http://localhost:8080',
+				target: httpBackendUrl,
 				changeOrigin: true,
 			}
 		}
