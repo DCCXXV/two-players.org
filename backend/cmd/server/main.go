@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"slices"
+
 	db "github.com/DCCXXV/twoplayers/backend/db/sqlc"
 	"github.com/DCCXXV/twoplayers/backend/internal/config"
 	"github.com/DCCXXV/twoplayers/backend/internal/database"
@@ -12,30 +14,17 @@ import (
 	appLogger "github.com/DCCXXV/twoplayers/backend/internal/logger"
 	"github.com/DCCXXV/twoplayers/backend/internal/realtime"
 	"github.com/DCCXXV/twoplayers/backend/internal/service"
-
 	"github.com/gin-gonic/gin"
 )
 
 func ManualCorsMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		allowed := false
-		if origin == "" {
-			allowed = true
-		} else {
-			for _, allowedOrigin := range allowedOrigins {
-				if origin == allowedOrigin {
-					allowed = true
-					break
-				}
-			}
-		}
-
-		if allowed {
+		if origin == "" || slices.Contains(allowedOrigins, origin) {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")                                                                                                                                 // Ajusta según necesites
-			c.Writer.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, Content-Length, X-CSRF-Token, Token, session, Origin, Host, Connection, Accept-Encoding, Accept-Language, X-Requested-With") // Cabeceras permitidas
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, Content-Length, X-CSRF-Token, Token, session, Origin, Host, Connection, Accept-Encoding, Accept-Language, X-Requested-With")
 		} else {
 			log.Printf("WARN: Manual CORS Middleware: Denied origin: %s", origin)
 			c.AbortWithStatus(http.StatusForbidden)
@@ -46,11 +35,6 @@ func ManualCorsMiddleware(allowedOrigins []string) gin.HandlerFunc {
 			log.Printf("DEBUG: Manual CORS Middleware: Handling OPTIONS request for origin: %s", origin)
 			c.AbortWithStatus(http.StatusNoContent)
 			return
-		}
-
-		if allowed {
-			c.Request.Header.Del("Origin")
-			log.Printf("DEBUG: Manual CORS Middleware: Deleted Origin header before passing to next handler.")
 		}
 
 		c.Next()
