@@ -55,10 +55,11 @@ func main() {
 	allowedOrigins := strings.Split(cfg.AllowedOrigins, ",")
 	corsConfig := cors.Config{
 		AllowOrigins:     allowedOrigins,
-		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS", "PATCH", "PUT"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Display-Name"},
 		AllowCredentials: true,
 	}
+	router.Use(cors.New(corsConfig))
 	router.Use(cors.New(corsConfig))
 
 	// 7. Setup Handlers
