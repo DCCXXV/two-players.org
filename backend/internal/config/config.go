@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -14,7 +13,7 @@ import (
 type Config struct {
 	DatabaseURL    string
 	ServerPort     string
-	AllowedOrigins []string
+	AllowedOrigins string
 }
 
 func LoadConfig() (*Config, error) {
@@ -44,15 +43,10 @@ func LoadConfig() (*Config, error) {
 		log.Printf("Info: ALLOWED_ORIGINS not set, defaulting to %s", allowedOriginsEnv)
 	}
 
-	allowedOrigins := strings.Split(allowedOriginsEnv, ",")
-	for i := range allowedOrigins {
-		allowedOrigins[i] = strings.TrimSpace(allowedOrigins[i])
-	}
-
 	cfg := &Config{
 		DatabaseURL:    dbURL,
 		ServerPort:     serverPort,
-		AllowedOrigins: allowedOrigins,
+		AllowedOrigins: allowedOriginsEnv,
 	}
 
 	log.Printf("Configuration loaded: Port=%s, AllowedOrigins=%v", cfg.ServerPort, cfg.AllowedOrigins)

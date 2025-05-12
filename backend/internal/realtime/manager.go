@@ -71,11 +71,9 @@ func NewManager(cfg *config.Config, cs service.ConnectionService, rm service.Roo
 					log.Printf("WebSocket CheckOrigin: Allowing request with empty Origin header.")
 					return true
 				}
-				for _, allowed := range cfg.AllowedOrigins {
-					if origin == allowed {
-						log.Printf("WebSocket CheckOrigin: Allowing origin: %s", origin)
-						return true
-					}
+				if origin == cfg.AllowedOrigins {
+					log.Printf("WebSocket CheckOrigin: Allowing origin: %s", origin)
+					return true
 				}
 				log.Printf("WARN: WebSocket CheckOrigin: Denied origin: %s", origin)
 				return false

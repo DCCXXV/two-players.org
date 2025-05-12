@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	"slices"
-
 	db "github.com/DCCXXV/twoplayers/backend/db/sqlc"
 	"github.com/DCCXXV/twoplayers/backend/internal/config"
 	"github.com/DCCXXV/twoplayers/backend/internal/database"
@@ -17,10 +15,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ManualCorsMiddleware(allowedOrigins []string) gin.HandlerFunc {
+func ManualCorsMiddleware(allowedOrigins string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		if origin == "" || slices.Contains(allowedOrigins, origin) {
+		if origin == "" || origin == allowedOrigins {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
