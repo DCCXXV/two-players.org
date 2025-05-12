@@ -52,7 +52,6 @@ func main() {
 
 	// 6. Initialize Gin Router
 	router := gin.Default()
-
 	allowedOrigins := strings.Split(cfg.AllowedOrigins, ",")
 	corsConfig := cors.Config{
 		AllowOrigins:     allowedOrigins,
