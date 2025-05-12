@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { displayName } from '$lib/socketStore';
     import { Switch } from '@skeletonlabs/skeleton-svelte';
 
     let {
@@ -14,7 +15,7 @@
     const playAsOptions = ['Random', 'X', 'O'];
     let selectedPlayAs = $state(playAsOptions[0]);
     let isPrivateRoom = $state(false);
-    let roomNameValue = $state('');
+    let roomNameValue = $state($displayName + '\'s room');
 
     function setPlayAs(selected: string) {
         selectedPlayAs = selected;
@@ -31,20 +32,20 @@
             GameType: "Tic Tac Toe",
             IsPrivate: isPrivateRoom
         });
-        roomNameValue = '';
+        roomNameValue = $displayName + '\'s room';
         selectedPlayAs = playAsOptions[0];
         isPrivateRoom = false;
     }
 </script>
 
-<div class="bg-surface-900 p-4 w-full xl:max-w-120">
+<div class="bg-surface-900 p-4 w-full md:max-w-120">
     <form class="flex flex-col gap-4" onsubmit={handleCreateRoom}>
         <label for="roomName">Room's name: </label>
         <input
             name="roomName"
-            class="input text-2xl bg-surface-800 text-primary-400 lora-700 rounded-none"
+            class="input text-2xl text-primary-400 lora-700 rounded-none border-primary-400 border-1"
             type="text"
-            placeholder="Name of the room"
+            placeholder={"Name of the room"}
             bind:value={roomNameValue}
         />
         <div class="flex items-center justify-between">

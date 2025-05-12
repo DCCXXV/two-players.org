@@ -37,6 +37,8 @@ type Querier interface {
 	// Retrieve all rooms that are not private, ordered by creation time descending.
 	// Useful for a public lobby list.
 	ListPublicRooms(ctx context.Context) ([]Room, error)
+	// Retrieve all rooms that are not private with player info, ordered by creation time descending.
+	ListPublicRoomsWithPlayers(ctx context.Context, arg ListPublicRoomsWithPlayersParams) ([]ListPublicRoomsWithPlayersRow, error)
 	// Retrieve all public rooms for a specific game type.
 	ListRoomsByGameType(ctx context.Context, gameType string) ([]Room, error)
 	UpdateActiveConnectionName(ctx context.Context, arg UpdateActiveConnectionNameParams) (int64, error)

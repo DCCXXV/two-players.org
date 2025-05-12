@@ -1,13 +1,18 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
     import CreateRoomForm from './CreateRoomForm.svelte';
+	import { displayName } from '$lib/socketStore';
 
-    interface Room {
-        id: string;
-        Name: string;
-        IsPrivate: boolean;
-    }
+	interface Room {
+		id: string;
+		Name: string;
+		IsPrivate: boolean;
+		CreatedBy?: string | null;
+		OtherPlayer?: string | null;
+	}
 
+	let username = $displayName
     let availableRooms = $state<Room[]>([]);
     let isLoadingRooms = $state(true);
     let errorLoadingRooms = $state<string | null>(null);
@@ -19,9 +24,9 @@
 		errorLoadingRooms = null;
 		console.log('Initial state isLoadingRooms=true, errorLoadingRooms=null');
 		try {
-			console.log('Intentando fetch a /api/v1/rooms...');
+			console.log('Trying to fetch /api/v1/rooms...');
 			const response = await fetch('/api/v1/rooms');
-			console.log('Respuesta recibida:', {
+			console.log('Response received:', {
 				ok: response.ok,
 				status: response.status,
 				statusText: response.statusText
@@ -33,11 +38,13 @@
 			const data = await response.json();
 			console.log('JSON received from /api/v1/rooms:', data);
 
-			availableRooms = data.map((room: any) => ({
-				id: room.id,
-				Name: room.name,
-				IsPrivate: !!room.is_private
-			}));
+		availableRooms = data.map((room: any) => ({
+			id: room.id,
+			Name: room.name,
+			IsPrivate: !!room.is_private,
+			CreatedBy: room.created_by,
+			OtherPlayer: room.other_player
+		}));
 		} catch (error) {
 			console.error('Error loading rooms:', error);
 			errorLoadingRooms = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -47,42 +54,35 @@
 		}
 	}
 
-    async function handleRoomCreation(options: {
-        Name: string;
-        GameType: string;
-        IsPrivate: boolean;
-    }) {
-        console.log('Room creation requested with options:', options);
-        isCreatingRoom = true;
-        try {
-            const response = await fetch('/api/v1/rooms', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+	async function handleRoomCreation(options: { Name: string; GameType: string; IsPrivate: boolean; }) {
+		isCreatingRoom = true;
+		try {
+			const response = await fetch('/api/v1/rooms', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-Display-Name': username
+				},
 				body: JSON.stringify({
 					name: options.Name,
 					game_type: "Tic Tac Toe",
 					is_private: options.IsPrivate
 				})
-            });
+			});
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: 'Failed to create room' }));
-                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-            }
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({ message: 'Failed to create room' }));
+				throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+			}
 
-            const newRoom = await response.json();
-            console.log('Room created successfully:', newRoom);
-
-            await loadRooms();
-        } catch (error) {
-            console.error('Error creating room:', error);
-            alert(`Error creating room: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        } finally {
-            isCreatingRoom = false;
-        }
-    }
+			const newRoom = await response.json();
+			goto(`/play/tic-tac-toe/${newRoom.id}`);
+		} catch (error) {
+			alert(`Error creating room: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		} finally {
+			isCreatingRoom = false;
+		}
+	}
 
     onMount(() => {
         loadRooms();
@@ -111,34 +111,30 @@
     <p class="text-error-500">Error: {errorLoadingRooms}</p>
     <button type="button" class="btn preset-outline-primary" onclick={loadRooms}>Try again</button>
 {:else if availableRooms.length > 0}
-<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-4">
-    {#each availableRooms as room (room.id)}
-        <div class="bg-surface-900 p-4 shadow flex flex-col gap-2 aspect-square">
-            <h4 class="text-lg text-primary-400 lora-700 text-pretty">{room.Name}</h4>
-            <span class="text-xs text-surface-400">
-                {room.IsPrivate ? 'Private' : 'Public'}
-            </span>
-            <div class="text-surface-300 text-sm">
-				<!--TO DO-->
-                <div>Player 1: <span class="font-bold">{room.CreatedBy}</span></div>
-                <div>
-                    {#if room.OtherPlayer}
-                        Player 2: <span class="font-bold">{room.OtherPlayer}</span>
-                    {:else}
-                        Player 2:
-                    {/if}
-                </div>
-            </div>
-        </div>
-    {/each}
-</div>
-
+	<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 xxl:grid-cols-7 gap-4">
+		{#each availableRooms as room (room.id)}
+			<div class="bg-surface-900 p-4 shadow flex flex-col gap-2 aspect-square">
+				<h4 class="text-lg text-primary-400 lora-700 text-pretty">{room.Name}</h4>
+				<div class="text-surface-300 text-sm">
+					<div>Player 1: <span class="font-bold">{room.CreatedBy}</span></div>
+					<div>
+					Player 2: 
+					{#if room.OtherPlayer}
+						<span class="font-bold">{room.OtherPlayer}</span>
+					{:else}
+						<span class="italic text-surface-500">Waiting...</span>
+					{/if}
+					</div>
+				</div>
+			</div>
+		{/each}
+	</div>
 {:else}
     <p class="text-surface-400">No public rooms available. Create one!</p>
 {/if}
 
 {#if isCreatingRoom}
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center opacity-80">
-        <p class="text-white text-xl lora-700">Creating room...</p>
+        <p class="text-xl lora-700">Creating room...</p>
     </div>
 {/if}

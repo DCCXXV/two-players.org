@@ -2,26 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
-	db "github.com/DCCXXV/twoplayers/backend/db/sqlc"
 	"github.com/DCCXXV/twoplayers/backend/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type HTTPHandler struct {
-	roomService service.RoomService
+	roomService   service.RoomService
+	playerService service.PlayerService // <-- Add this!
 }
 
-func NewHTTPHandler(rs service.RoomService) *HTTPHandler {
+func NewHTTPHandler(rs service.RoomService, ps service.PlayerService) *HTTPHandler {
 	return &HTTPHandler{
-		roomService: rs,
+		roomService:   rs,
+		playerService: ps,
 	}
 }
-
-// Request/Response Structs
 
 type CreateRoomRequest struct {
 	Name        string           `json:"name" binding:"required"`
@@ -29,8 +29,6 @@ type CreateRoomRequest struct {
 	IsPrivate   bool             `json:"is_private"`
 	GameOptions *json.RawMessage `json:"game_options,omitempty"`
 }
-
-// Handlers
 
 func (h *HTTPHandler) CreateRoom(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -42,25 +40,45 @@ func (h *HTTPHandler) CreateRoom(c *gin.Context) {
 		return
 	}
 
+	displayName := c.GetHeader("X-Display-Name")
+	if displayName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing display name"})
+		return
+	}
+
 	serviceParams := service.CreateRoomParams{
 		Name:      req.Name,
 		GameType:  req.GameType,
 		IsPrivate: req.IsPrivate,
 	}
-
 	if req.GameOptions != nil {
 		serviceParams.GameOptions = *req.GameOptions
 	}
 
 	createdRoom, err := h.roomService.CreateRoom(ctx, serviceParams)
-
 	if err != nil {
 		log.Printf("ERROR: Failed to create room via service: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create room"})
 		return
 	}
 
-	log.Printf("INFO: Room created successfully: ID=%s, Name=%s, Type=%s", createdRoom.ID, createdRoom.Name, createdRoom.GameType)
+	playerParams := service.CreatePlayerParams{
+		RoomID:            createdRoom.ID,
+		PlayerDisplayName: displayName,
+		PlayerOrder:       0,
+	}
+	_, err = h.playerService.CreatePlayer(ctx, playerParams)
+	if err != nil {
+		log.Printf("ERROR: Failed to create player 1 for room %s: %v", createdRoom.ID, err)
+		delErr := h.roomService.DeleteRoom(ctx, createdRoom.ID.Bytes)
+		if delErr != nil {
+			log.Printf("ERROR: Failed to delete room %s after player creation failed: %v", createdRoom.ID, delErr)
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create player for room"})
+		return
+	}
+
+	log.Printf("INFO: Room and player 1 created successfully: RoomID=%s, Player=%s", createdRoom.ID, displayName)
 	c.JSON(http.StatusCreated, createdRoom)
 }
 
@@ -109,17 +127,48 @@ func (h *HTTPHandler) DeleteRoom(c *gin.Context) {
 
 func (h *HTTPHandler) ListPublicRooms(c *gin.Context) {
 	ctx := c.Request.Context()
-	rooms, err := h.roomService.ListPublicRooms(ctx)
 
+	limit := int32(20)
+	offset := int32(0)
+	if l := c.Query("limit"); l != "" {
+		fmt.Sscanf(l, "%d", &limit)
+	}
+	if o := c.Query("offset"); o != "" {
+		fmt.Sscanf(o, "%d", &offset)
+	}
+
+	rooms, err := h.roomService.ListPublicRoomsWithPlayers(ctx, limit, offset)
 	if err != nil {
-		log.Printf("ERROR: Failed to list public rooms: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve rooms"})
 		return
 	}
 
-	if rooms == nil {
-		rooms = []db.Room{}
+	type RoomPreview struct {
+		ID          string  `json:"id"`
+		Name        string  `json:"name"`
+		IsPrivate   bool    `json:"is_private"`
+		CreatedBy   *string `json:"created_by"`
+		OtherPlayer *string `json:"other_player"`
 	}
 
-	c.JSON(http.StatusOK, rooms)
+	previews := make([]RoomPreview, 0, len(rooms))
+	for _, r := range rooms {
+		var createdBy *string
+		if r.CreatedBy.Valid {
+			createdBy = &r.CreatedBy.String
+		}
+		var otherPlayer *string
+		if r.OtherPlayer.Valid {
+			otherPlayer = &r.OtherPlayer.String
+		}
+		previews = append(previews, RoomPreview{
+			ID:          r.ID.String(),
+			Name:        r.Name,
+			IsPrivate:   r.IsPrivate,
+			CreatedBy:   createdBy,
+			OtherPlayer: otherPlayer,
+		})
+	}
+
+	c.JSON(http.StatusOK, previews)
 }

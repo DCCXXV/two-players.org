@@ -9,7 +9,7 @@
 		displayName
 	} from '$lib/socketStore';
 
-onMount(() => {
+	onMount(() => {
 		console.log('Layout onMount: Attempting to call connectWebSocket...');
 		connectWebSocket();
 

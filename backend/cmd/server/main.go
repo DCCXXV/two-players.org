@@ -97,7 +97,7 @@ func main() {
 	router.Use(ManualCorsMiddleware(cfg.AllowedOrigins))
 
 	// 7. Setup Handlers
-	httpHandler := handlers.NewHTTPHandler(roomService)
+	httpHandler := handlers.NewHTTPHandler(roomService, playerService)
 	wsHandler := handlers.NewWebSocketHandler(rtManager)
 
 	// 8. Register Routes
