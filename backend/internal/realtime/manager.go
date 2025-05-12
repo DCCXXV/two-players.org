@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -59,6 +60,7 @@ type Room struct {
 }
 
 func NewManager(cfg *config.Config, cs service.ConnectionService, rm service.RoomService, pl service.PlayerService) (*Manager, error) {
+	allowedOriginsSlice := strings.Split(cfg.AllowedOrigins, ",")
 	m := &Manager{
 		config:            cfg,
 		connectionService: cs,
@@ -71,9 +73,11 @@ func NewManager(cfg *config.Config, cs service.ConnectionService, rm service.Roo
 					log.Printf("WebSocket CheckOrigin: Allowing request with empty Origin header.")
 					return true
 				}
-				if origin == cfg.AllowedOrigins {
-					log.Printf("WebSocket CheckOrigin: Allowing origin: %s", origin)
-					return true
+				for _, allowed := range allowedOriginsSlice {
+					if origin == allowed {
+						log.Printf("WebSocket CheckOrigin: Allowing origin: %s", origin)
+						return true
+					}
 				}
 				log.Printf("WARN: WebSocket CheckOrigin: Denied origin: %s", origin)
 				return false
