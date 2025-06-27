@@ -24,10 +24,11 @@ type Player struct {
 }
 
 type Room struct {
-	ID          pgtype.UUID        `json:"id"`
-	Name        string             `json:"name"`
-	GameType    string             `json:"game_type"`
-	GameOptions []byte             `json:"game_options"`
-	IsPrivate   bool               `json:"is_private"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	ID              pgtype.UUID        `json:"id"`
+	Name            string             `json:"name"`
+	GameType        string             `json:"game_type"`
+	GameOptions     []byte             `json:"game_options"`
+	IsPrivate       bool               `json:"is_private"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	HostDisplayName string             `json:"host_display_name"`
 }

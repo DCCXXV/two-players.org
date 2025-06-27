@@ -65,7 +65,7 @@
 				},
 				body: JSON.stringify({
 					name: options.Name,
-					game_type: "Tic Tac Toe",
+					game_type: "TicTacToe",
 					is_private: options.IsPrivate
 				})
 			});

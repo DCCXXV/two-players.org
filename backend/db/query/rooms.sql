@@ -3,10 +3,11 @@
 INSERT INTO rooms (
     name,
     game_type,
+    host_display_name,
     game_options,
     is_private
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
 RETURNING *;
 

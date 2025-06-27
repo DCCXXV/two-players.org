@@ -39,7 +39,7 @@ func main() {
 	queries := db.New(pool)
 
 	// 4. Initialize Services
-	roomService := service.NewRoomService(queries)
+	roomService := service.NewRoomService(queries, pool)
 	connectionService := service.NewConnectionService(queries)
 	playerService := service.NewPlayerService(queries)
 
@@ -63,7 +63,7 @@ func main() {
 	router.Use(cors.New(corsConfig))
 
 	// 7. Setup Handlers
-	httpHandler := handlers.NewHTTPHandler(roomService, playerService)
+	httpHandler := handlers.NewHTTPHandler(roomService, playerService, connectionService)
 	wsHandler := handlers.NewWebSocketHandler(rtManager)
 
 	// 8. Register Routes

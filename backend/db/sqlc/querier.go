@@ -30,6 +30,8 @@ type Querier interface {
 	FindStaleConnections(ctx context.Context, lastSeen pgtype.Timestamptz) ([]string, error)
 	// Retrieves an active connection by display name.
 	GetActiveConnection(ctx context.Context, displayName string) (ActiveConnection, error)
+	// Retrieves all players associated with a specific room, ordered by their turn.
+	GetPlayersByRoomID(ctx context.Context, roomID pgtype.UUID) ([]Player, error)
 	// Retrieve a specific room by its unique ID.
 	GetRoomByID(ctx context.Context, id pgtype.UUID) (Room, error)
 	// Lists users currently in the lobby state.

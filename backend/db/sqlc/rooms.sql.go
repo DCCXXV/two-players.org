@@ -15,19 +15,21 @@ const createRoom = `-- name: CreateRoom :one
 INSERT INTO rooms (
     name,
     game_type,
+    host_display_name,
     game_options,
     is_private
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
-RETURNING id, name, game_type, game_options, is_private, created_at
+RETURNING id, name, game_type, game_options, is_private, created_at, host_display_name
 `
 
 type CreateRoomParams struct {
-	Name        string `json:"name"`
-	GameType    string `json:"game_type"`
-	GameOptions []byte `json:"game_options"`
-	IsPrivate   bool   `json:"is_private"`
+	Name            string `json:"name"`
+	GameType        string `json:"game_type"`
+	HostDisplayName string `json:"host_display_name"`
+	GameOptions     []byte `json:"game_options"`
+	IsPrivate       bool   `json:"is_private"`
 }
 
 // Create a new game room and return the created room record.
@@ -35,6 +37,7 @@ func (q *Queries) CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, e
 	row := q.db.QueryRow(ctx, createRoom,
 		arg.Name,
 		arg.GameType,
+		arg.HostDisplayName,
 		arg.GameOptions,
 		arg.IsPrivate,
 	)
@@ -46,6 +49,7 @@ func (q *Queries) CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, e
 		&i.GameOptions,
 		&i.IsPrivate,
 		&i.CreatedAt,
+		&i.HostDisplayName,
 	)
 	return i, err
 }
@@ -63,7 +67,7 @@ func (q *Queries) DeleteRoom(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getRoomByID = `-- name: GetRoomByID :one
-SELECT id, name, game_type, game_options, is_private, created_at FROM rooms
+SELECT id, name, game_type, game_options, is_private, created_at, host_display_name FROM rooms
 WHERE id = $1
 LIMIT 1
 `
@@ -79,12 +83,13 @@ func (q *Queries) GetRoomByID(ctx context.Context, id pgtype.UUID) (Room, error)
 		&i.GameOptions,
 		&i.IsPrivate,
 		&i.CreatedAt,
+		&i.HostDisplayName,
 	)
 	return i, err
 }
 
 const listPublicRooms = `-- name: ListPublicRooms :many
-SELECT id, name, game_type, game_options, is_private, created_at FROM rooms
+SELECT id, name, game_type, game_options, is_private, created_at, host_display_name FROM rooms
 WHERE is_private = FALSE
 ORDER BY created_at DESC
 `
@@ -107,6 +112,7 @@ func (q *Queries) ListPublicRooms(ctx context.Context) ([]Room, error) {
 			&i.GameOptions,
 			&i.IsPrivate,
 			&i.CreatedAt,
+			&i.HostDisplayName,
 		); err != nil {
 			return nil, err
 		}
@@ -174,7 +180,7 @@ func (q *Queries) ListPublicRoomsWithPlayers(ctx context.Context, arg ListPublic
 }
 
 const listRoomsByGameType = `-- name: ListRoomsByGameType :many
-SELECT id, name, game_type, game_options, is_private, created_at FROM rooms
+SELECT id, name, game_type, game_options, is_private, created_at, host_display_name FROM rooms
 WHERE game_type = $1 AND is_private = FALSE
 ORDER BY created_at DESC
 `
@@ -196,6 +202,7 @@ func (q *Queries) ListRoomsByGameType(ctx context.Context, gameType string) ([]R
 			&i.GameOptions,
 			&i.IsPrivate,
 			&i.CreatedAt,
+			&i.HostDisplayName,
 		); err != nil {
 			return nil, err
 		}

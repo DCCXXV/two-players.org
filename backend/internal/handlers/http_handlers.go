@@ -12,14 +12,16 @@ import (
 )
 
 type HTTPHandler struct {
-	roomService   service.RoomService
-	playerService service.PlayerService // <-- Add this!
+	roomService      service.RoomService
+	playerService    service.PlayerService
+	connectionService service.ConnectionService
 }
 
-func NewHTTPHandler(rs service.RoomService, ps service.PlayerService) *HTTPHandler {
+func NewHTTPHandler(rs service.RoomService, ps service.PlayerService, cs service.ConnectionService) *HTTPHandler {
 	return &HTTPHandler{
-		roomService:   rs,
-		playerService: ps,
+		roomService:      rs,
+		playerService:    ps,
+		connectionService: cs,
 	}
 }
 
@@ -46,10 +48,23 @@ func (h *HTTPHandler) CreateRoom(c *gin.Context) {
 		return
 	}
 
+	// Create active connection for the host
+	_, err := h.connectionService.CreateConnection(ctx, service.CreateConnectionParams{DisplayName: displayName})
+	if err != nil {
+		if err == service.ErrDisplayNameTaken {
+			c.JSON(http.StatusConflict, gin.H{"error": "Display name already taken"})
+			return
+		}
+		log.Printf("ERROR: Failed to create active connection for host %s: %v", displayName, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to establish host connection"})
+		return
+	}
+
 	serviceParams := service.CreateRoomParams{
-		Name:      req.Name,
-		GameType:  req.GameType,
-		IsPrivate: req.IsPrivate,
+		Name:            req.Name,
+		GameType:        req.GameType,
+		IsPrivate:       req.IsPrivate,
+		HostDisplayName: displayName,
 	}
 	if req.GameOptions != nil {
 		serviceParams.GameOptions = *req.GameOptions

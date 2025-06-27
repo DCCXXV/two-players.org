@@ -10,3 +10,9 @@ INSERT INTO players (
     $1, $2, $3
 )
 RETURNING *;
+
+-- name: GetPlayersByRoomID :many
+-- Retrieves all players associated with a specific room, ordered by their turn.
+SELECT * FROM players
+WHERE room_id = $1
+ORDER BY player_order;

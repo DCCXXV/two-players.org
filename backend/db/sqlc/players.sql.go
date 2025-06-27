@@ -43,3 +43,36 @@ func (q *Queries) CreatePlayer(ctx context.Context, arg CreatePlayerParams) (Pla
 	)
 	return i, err
 }
+
+const getPlayersByRoomID = `-- name: GetPlayersByRoomID :many
+SELECT id, room_id, player_display_name, player_order, joined_at FROM players
+WHERE room_id = $1
+ORDER BY player_order
+`
+
+// Retrieves all players associated with a specific room, ordered by their turn.
+func (q *Queries) GetPlayersByRoomID(ctx context.Context, roomID pgtype.UUID) ([]Player, error) {
+	rows, err := q.db.Query(ctx, getPlayersByRoomID, roomID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Player
+	for rows.Next() {
+		var i Player
+		if err := rows.Scan(
+			&i.ID,
+			&i.RoomID,
+			&i.PlayerDisplayName,
+			&i.PlayerOrder,
+			&i.JoinedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

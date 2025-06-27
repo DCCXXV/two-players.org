@@ -38,7 +38,24 @@ func NewConnectionService(queries db.Querier) ConnectionService {
 }
 
 func (s *connectionService) CreateConnection(ctx context.Context, params CreateConnectionParams) (db.ActiveConnection, error) {
-	return s.queries.CreateActiveConnection(ctx, params.DisplayName)
+	// Try to get the connection first
+	conn, err := s.queries.GetActiveConnection(ctx, params.DisplayName)
+	if err == nil {
+		// Connection already exists, return it
+		return conn, nil
+	}
+
+	// If the error is not sql.ErrNoRows, then it's a real error
+	if err != nil && err.Error() != "no rows in result set" {
+		return db.ActiveConnection{}, fmt.Errorf("failed to get active connection: %w", err)
+	}
+
+	// Connection does not exist, create a new one
+	newConn, err := s.queries.CreateActiveConnection(ctx, params.DisplayName)
+	if err != nil {
+		return db.ActiveConnection{}, fmt.Errorf("failed to create active connection: %w", err)
+	}
+	return newConn, nil
 }
 
 func (s *connectionService) DeleteConnection(ctx context.Context, displayName string) error {
