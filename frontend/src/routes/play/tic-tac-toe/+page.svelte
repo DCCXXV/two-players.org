@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-    import CreateRoomForm from './CreateRoomForm.svelte';
+	import CreateRoomForm from './CreateRoomForm.svelte';
 	import { displayName } from '$lib/socketStore';
 
 	interface Room {
@@ -12,11 +12,11 @@
 		OtherPlayer?: string | null;
 	}
 
-	let username = $displayName
-    let availableRooms = $state<Room[]>([]);
-    let isLoadingRooms = $state(true);
-    let errorLoadingRooms = $state<string | null>(null);
-    let isCreatingRoom = $state(false);
+	let username = $displayName;
+	let availableRooms = $state<Room[]>([]);
+	let isLoadingRooms = $state(true);
+	let errorLoadingRooms = $state<string | null>(null);
+	let isCreatingRoom = $state(false);
 
 	async function loadRooms() {
 		console.group('loadRooms()');
@@ -38,13 +38,13 @@
 			const data = await response.json();
 			console.log('JSON received from /api/v1/rooms:', data);
 
-		availableRooms = data.map((room: any) => ({
-			id: room.id,
-			Name: room.name,
-			IsPrivate: !!room.is_private,
-			CreatedBy: room.created_by,
-			OtherPlayer: room.other_player
-		}));
+			availableRooms = data.map((room: any) => ({
+				id: room.id,
+				Name: room.name,
+				IsPrivate: !!room.is_private,
+				CreatedBy: room.created_by,
+				OtherPlayer: room.other_player
+			}));
 		} catch (error) {
 			console.error('Error loading rooms:', error);
 			errorLoadingRooms = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -54,7 +54,11 @@
 		}
 	}
 
-	async function handleRoomCreation(options: { Name: string; GameType: string; IsPrivate: boolean; }) {
+	async function handleRoomCreation(options: {
+		Name: string;
+		GameType: string;
+		IsPrivate: boolean;
+	}) {
 		isCreatingRoom = true;
 		try {
 			const response = await fetch(import.meta.env.VITE_SOCKET_URL + '/api/v1/rooms', {
@@ -65,7 +69,7 @@
 				},
 				body: JSON.stringify({
 					name: options.Name,
-					game_type: "TicTacToe",
+					game_type: 'tic-tac-toe',
 					is_private: options.IsPrivate
 				})
 			});
@@ -84,57 +88,58 @@
 		}
 	}
 
-    onMount(() => {
-        loadRooms();
-    });
+	onMount(() => {
+		loadRooms();
+	});
 </script>
 
 <ol class="flex items-center gap-4">
-    <li><a class="opacity-60 hover:underline" href="/play">Play</a></li>
-    <li class="opacity-50" aria-hidden="true">&rsaquo;</li>
-    <li>
-        <a class="text-primary-400 hover:underline" href="/play/tic-tac-toe"
-            >Tic-Tac-Toe</a
-        >
-    </li>
+	<li><a class="opacity-60 hover:underline" href="/play">Play</a></li>
+	<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
+	<li>
+		<a class="text-primary-400 hover:underline" href="/play/tic-tac-toe">Tic-Tac-Toe</a>
+	</li>
 </ol>
-
 <h3 class="h3 lora-700 text-surface-200 my-4">Create a room</h3>
-
 <CreateRoomForm onRoomCreate={handleRoomCreation} />
-
 <h3 class="h3 lora-700 text-surface-200 my-4">Available rooms</h3>
 
 {#if isLoadingRooms}
-    <p class="text-surface-400">Loading rooms...</p>
+	<p class="text-surface-400">Loading rooms...</p>
 {:else if errorLoadingRooms}
-    <p class="text-error-500">Error: {errorLoadingRooms}</p>
-    <button type="button" class="btn preset-outline-primary" onclick={loadRooms}>Try again</button>
+	<p class="text-error-500">Error: {errorLoadingRooms}</p>
+	<button type="button" class="btn preset-outline-primary" onclick={loadRooms}>Try again</button>
 {:else if availableRooms.length > 0}
-	<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 xxl:grid-cols-7 gap-4">
+	<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
 		{#each availableRooms as room (room.id)}
-			<div class="bg-surface-900 p-4 shadow flex flex-col gap-2 aspect-square">
-				<h4 class="text-lg text-primary-400 lora-700 text-pretty">{room.Name}</h4>
-				<div class="text-surface-300 text-sm">
-					<div>Player 1: <span class="font-bold">{room.CreatedBy}</span></div>
-					<div>
-					Player 2: 
-					{#if room.OtherPlayer}
-						<span class="font-bold">{room.OtherPlayer}</span>
-					{:else}
-						<span class="italic text-surface-500">Waiting...</span>
-					{/if}
+			<a href={`/play/tic-tac-toe/${room.id}`} class="group">
+				<div
+					class="bg-surface-900 group-hover:bg-surface-800 flex aspect-square flex-col gap-2 p-4 shadow transition-colors"
+				>
+					<h4 class="text-primary-400 lora-700 text-lg text-pretty">{room.Name}</h4>
+					<div class="text-surface-300 space-y-1 text-sm">
+						<div>Player 1: <span class="font-bold">{room.CreatedBy}</span></div>
+						<div>
+							Player 2:
+							{#if room.OtherPlayer}
+								<span class="font-bold">{room.OtherPlayer}</span>
+							{:else}
+								<span class="text-surface-500 italic">Join to play!</span>
+							{/if}
+						</div>
+					</div>
+					<div class="mt-auto">
+						<div class="text-surface-400 text-xs">Click to join →</div>
 					</div>
 				</div>
-			</div>
+			</a>
 		{/each}
 	</div>
 {:else}
-    <p class="text-surface-400">No public rooms available. Create one!</p>
+	<p class="text-surface-400">No public rooms available. Create one!</p>
 {/if}
-
 {#if isCreatingRoom}
-    <div class="fixed inset-0 bg-black/50 flex items-center justify-center opacity-80">
-        <p class="text-xl lora-700">Creating room...</p>
-    </div>
+	<div class="fixed inset-0 flex items-center justify-center bg-black/50 opacity-80">
+		<p class="lora-700 text-xl">Creating room...</p>
+	</div>
 {/if}

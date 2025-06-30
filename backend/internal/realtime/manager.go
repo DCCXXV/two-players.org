@@ -12,11 +12,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DCCXXV/twoplayers/backend/internal/config" // Necesario para los structs de la BD
+	"github.com/DCCXXV/twoplayers/backend/internal/config"
 	"github.com/DCCXXV/twoplayers/backend/internal/service"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // -----------------------------------------------------
@@ -29,8 +30,12 @@ type Client struct {
 	manager     *Manager
 	id          uuid.UUID
 	displayName string
-	currentRoom *Room // Referencia a la sala en la que se encuentra el cliente.
+	currentRoom *Room
 	send        chan []byte
+
+	// Estado en la sala actual
+	role     string // "player_0", "player_1", "spectator"
+	joinedAt time.Time
 }
 
 // Manager es el director de orquesta de todas las conexiones y salas en tiempo real.
@@ -44,32 +49,91 @@ type Manager struct {
 
 	mu      sync.RWMutex
 	clients map[uuid.UUID]*Client
-	rooms   map[uuid.UUID]*Room // Mapa de salas activas en memoria.
+	rooms   map[uuid.UUID]*Room
 }
 
-// GameInstance es una interfaz que cada juego (Tres en Raya, etc.) debe implementar.
+// GameInstance es una interfaz que cada juego debe implementar.
 type GameInstance interface {
-	HandleMessage(client *Client, payload json.RawMessage) error
-	AddPlayer(client *Client) error
-	RemovePlayer(client *Client)
-	GetState() any
+	// Solo maneja la lógica pura del juego
+	HandleMove(playerIndex int, move any) error
+	GetGameState() any // Tablero, turno, ganador, etc.
+	IsGameOver() bool
+	GetWinner() string
+	Reset()
 }
 
 // Room representa una sala de juego activa en memoria.
 type Room struct {
-	ID       uuid.UUID
-	GameType string
-	Clients  map[uuid.UUID]*Client
-	HostName string
-	Game     GameInstance
-	manager  *Manager
-	mu       sync.RWMutex
+	ID         uuid.UUID
+	GameType   string
+	HostName   string
+	Game       GameInstance
+	manager    *Manager
+	mu         sync.RWMutex
+	Clients    map[uuid.UUID]*Client
+	MaxPlayers int
+}
+
+// Métodos helper SIN locks para uso interno
+func (r *Room) getPlayersInternal() []*Client {
+	// NO usar locks aquí - se asume que el caller ya tiene el lock
+	var players []*Client
+	for _, client := range r.Clients {
+		if strings.HasPrefix(client.role, "player_") {
+			players = append(players, client)
+		}
+	}
+	return players
+}
+
+func (r *Room) getSpectatorsInternal() []*Client {
+	// NO usar locks aquí - se asume que el caller ya tiene el lock
+	var spectators []*Client
+	for _, client := range r.Clients {
+		if client.role == "spectator" {
+			spectators = append(spectators, client)
+		}
+	}
+	return spectators
+}
+
+func (r *Room) getPlayerCountInternal() int {
+	return len(r.getPlayersInternal())
+}
+
+func (r *Room) getSpectatorCountInternal() int {
+	return len(r.getSpectatorsInternal())
+}
+
+// Métodos públicos CON locks (mantener para uso externo)
+func (r *Room) GetPlayers() []*Client {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.getPlayersInternal()
+}
+
+func (r *Room) GetSpectators() []*Client {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.getSpectatorsInternal()
+}
+
+func (r *Room) GetPlayerCount() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.getPlayerCountInternal()
+}
+
+func (r *Room) GetSpectatorCount() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.getSpectatorCountInternal()
 }
 
 // WebSocketMessage es la estructura genérica para la comunicación.
 type WebSocketMessage struct {
 	Type    string          `json:"type"`
-	Payload json.RawMessage `json:"payload,omitempty"` // Usamos RawMessage para retrasar el parseo del payload.
+	Payload json.RawMessage `json:"payload,omitempty"`
 }
 
 // ErrorPayload es una estructura estándar para enviar errores al cliente.
@@ -120,7 +184,7 @@ func (m *Manager) ServeWebSocket(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	// --- Lógica para crear una conexión y un nombre de usuario único ---
+	// Lógica para crear una conexión y un nombre de usuario único
 	var dbErr error
 	var generatedName string
 	for i := 0; i < 5; i++ {
@@ -145,7 +209,7 @@ func (m *Manager) ServeWebSocket(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("failed to register connection after retries: %w", dbErr)
 	}
 
-	// --- Creación del cliente y lanzamiento de los pumps ---
+	// Creación del cliente y lanzamiento de los pumps
 	client := &Client{
 		conn:        conn,
 		manager:     m,
@@ -201,17 +265,33 @@ func (m *Manager) cleanupConnectionDB(displayName string) {
 	}
 }
 
-// handleJoinRoom es el handler para el mensaje "join_room". Activa una sala si es necesario.
+func (m *Manager) getMaxPlayersForGame(gameType string) int {
+	switch gameType {
+	case "tic-tac-toe":
+		return 2
+	default:
+		return 2
+	}
+}
+
+// handleJoinRoom es el handler para el mensaje "join_room".
 func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
+	log.Printf("🔄 handleJoinRoom: Starting for client %s", client.displayName)
+
 	var req struct {
 		RoomID string `json:"roomId"`
 	}
 	if err := json.Unmarshal(payload, &req); err != nil {
+		log.Printf("❌ handleJoinRoom: Invalid payload: %v", err)
 		client.sendError("Invalid payload for join_room")
 		return
 	}
+
+	log.Printf("🔄 handleJoinRoom: Parsed roomId: %s", req.RoomID)
+
 	roomID, err := uuid.Parse(req.RoomID)
 	if err != nil {
+		log.Printf("❌ handleJoinRoom: Invalid UUID: %v", err)
 		client.sendError("Invalid room ID format")
 		return
 	}
@@ -224,7 +304,7 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 	m.mu.Lock()
 	room, ok := m.rooms[roomID]
 	if !ok {
-		// La sala no está en memoria, la cargamos desde la BD.
+		// La sala no está en memoria, la cargamos desde la BD
 		dbRoom, err := m.roomService.GetRoomByID(context.Background(), roomID)
 		if err != nil {
 			m.mu.Unlock()
@@ -235,28 +315,31 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 		var game GameInstance
 		switch dbRoom.GameType {
 		case "tic-tac-toe":
-			//game = games.NewTicTacToe() // ¡Asegúrate de que este constructor exista!
+			game = &TempTicTacToe{}
 		default:
 			m.mu.Unlock()
 			client.sendError(fmt.Sprintf("Game type '%s' not supported", dbRoom.GameType))
 			return
 		}
 
-		// Crear la sala en memoria, convirtiendo los tipos de la BD a tipos de Go.
+		// Crear la sala en memoria
 		room = &Room{
-			ID:       uuid.UUID(dbRoom.ID.Bytes),
-			GameType: dbRoom.GameType,
-			Clients:  make(map[uuid.UUID]*Client),
-			HostName: dbRoom.HostDisplayName,
-			Game:     game,
-			manager:  m,
+			ID:         uuid.UUID(dbRoom.ID.Bytes),
+			GameType:   dbRoom.GameType,
+			Clients:    make(map[uuid.UUID]*Client),
+			HostName:   dbRoom.HostDisplayName,
+			Game:       game,
+			manager:    m,
+			MaxPlayers: m.getMaxPlayersForGame(dbRoom.GameType),
 		}
 		m.rooms[room.ID] = room
 		log.Printf("Activated room %s in memory.", room.ID)
 	}
 	m.mu.Unlock()
 
+	log.Printf("🔄 handleJoinRoom: About to call room.addClient")
 	room.addClient(client)
+	log.Printf("✅ handleJoinRoom: Completed successfully")
 }
 
 // -----------------------------------------------------
@@ -264,35 +347,79 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 // -----------------------------------------------------
 
 func (r *Room) addClient(client *Client) {
+	log.Printf("🔄 addClient: Starting for client %s in room %s", client.displayName, r.ID)
+
 	r.mu.Lock()
-	defer r.mu.Unlock()
 
 	if _, ok := r.Clients[client.id]; ok {
-		return // El cliente ya está en la sala.
-	}
-
-	// Usar el servicio para registrar al jugador en la BD.
-	joinResult, err := r.manager.roomService.JoinRoom(context.Background(), service.JoinRoomInput{
-		RoomID:      r.ID,
-		DisplayName: client.displayName,
-	})
-	if err != nil {
-		log.Printf("ERROR: Failed to add player to room in DB: %v", err)
-		client.sendError(fmt.Sprintf("Cannot join game: %s", err.Error()))
+		log.Printf("⚠️  addClient: Client already in room")
+		r.mu.Unlock()
 		return
 	}
 
-	if err := r.Game.AddPlayer(client); err != nil {
-		client.sendError(fmt.Sprintf("Cannot join game logic: %s", err.Error()))
-		return
+	// Determinar rol basado en orden de llegada - USAR MÉTODOS INTERNOS
+	playerCount := r.getPlayerCountInternal() // ← Sin deadlock
+	log.Printf("🔄 addClient: Current player count: %d", playerCount)
+
+	var playerOrder int16
+	isPlayer := false
+	if playerCount == 0 {
+		client.role = "player_0"
+		playerOrder = 0
+		isPlayer = true
+	} else if playerCount == 1 {
+		client.role = "player_1"
+		playerOrder = 1
+		isPlayer = true
+	} else {
+		client.role = "spectator"
 	}
 
-	r.Clients[client.id] = client
+	// Si el cliente es un jugador, lo persistimos en la BD antes de añadirlo a la sala en memoria.
+	if isPlayer {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		params := service.CreatePlayerParams{
+			RoomID:            pgtype.UUID{Bytes: r.ID, Valid: true},
+			PlayerDisplayName: client.displayName,
+			PlayerOrder:       playerOrder,
+		}
+		_, err := r.manager.playerService.CreatePlayer(ctx, params)
+		if err != nil {
+			var pgErr *pgconn.PgError
+			// Si es una violación de restricción única, no es un error fatal aquí.
+			// Significa que el jugador ya estaba registrado (p. ej., el anfitrión que vuelve a unirse).
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+				log.Printf("ℹ️ addClient: Player %s already exists in room %s. Continuing.", client.displayName, r.ID)
+			} else {
+				log.Printf("❌ addClient: Failed to create player in DB for client %s in room %s: %v", client.displayName, r.ID, err)
+				client.sendError("Failed to join room: could not save player data.")
+				r.mu.Unlock()
+				return
+			}
+		} else {
+			log.Printf("✅ addClient: Successfully created player record in DB for %s as player %d", client.displayName, playerOrder)
+		}
+	}
+
+	client.joinedAt = time.Now()
 	client.currentRoom = r
-	log.Printf("Client %s joined room %s as %s", client.displayName, r.ID, joinResult.Role)
+	r.Clients[client.id] = client
 
-	client.sendMessage("join_success", map[string]any{"roomId": r.ID.String()})
-	r.broadcastStateUpdate()
+	log.Printf("✅ addClient: Client %s joined room %s as %s (total players: %d)",
+		client.displayName, r.ID, client.role, r.getPlayerCountInternal())
+
+	client.sendMessage("join_success", map[string]any{
+		"roomId": r.ID.String(),
+		"role":   client.role,
+	})
+
+	r.mu.Unlock() // ← Liberar antes del broadcast
+
+	log.Printf("🔄 addClient: About to call broadcastRoomState")
+	r.broadcastRoomState()
+	log.Printf("✅ addClient: Completed successfully")
 }
 
 func (r *Room) removeClient(client *Client) {
@@ -302,7 +429,6 @@ func (r *Room) removeClient(client *Client) {
 	if _, ok := r.Clients[client.id]; ok {
 		delete(r.Clients, client.id)
 		client.currentRoom = nil
-		r.Game.RemovePlayer(client)
 
 		log.Printf("Client %s left room %s", client.displayName, r.ID)
 
@@ -312,21 +438,61 @@ func (r *Room) removeClient(client *Client) {
 			r.manager.mu.Unlock()
 			log.Printf("Room %s is now empty and has been removed.", r.ID)
 		} else {
-			r.broadcastStateUpdate()
+			r.broadcastRoomState()
 		}
 	}
 }
 
-func (r *Room) broadcastStateUpdate() {
-	state := r.Game.GetState()
-	message, err := createWebSocketMessage("game_state_update", state)
+func (r *Room) broadcastRoomState() {
+	log.Printf("🔄 broadcastRoomState: Starting for room %s", r.ID)
+
+	r.mu.RLock()
+	players := r.getPlayersInternal()       // ← Usar métodos internos
+	spectators := r.getSpectatorsInternal() // ← Usar métodos internos
+
+	// Convertir a nombres para el frontend
+	playerNames := make([]string, len(players))
+	for i, p := range players {
+		playerNames[i] = p.displayName
+	}
+
+	spectatorNames := make([]string, len(spectators))
+	for i, s := range spectators {
+		spectatorNames[i] = s.displayName
+	}
+
+	gameState := r.Game.GetGameState()
+	r.mu.RUnlock() // ← Liberar antes de crear el mapa
+
+	// Estado combinado
+	roomState := map[string]any{
+		"roomId":         r.ID.String(),
+		"gameType":       r.GameType,
+		"players":        playerNames,
+		"spectators":     spectatorNames,
+		"playerCount":    len(players),
+		"spectatorCount": len(spectators),
+		"maxPlayers":     r.MaxPlayers,
+		"canStart":       len(players) == r.MaxPlayers,
+		"game":           gameState,
+	}
+
+	log.Printf("🔄 broadcastRoomState: Room state created: %+v", roomState)
+
+	r.broadcastMessage("game_state_update", roomState)
+
+	log.Printf("✅ broadcastRoomState: Completed")
+}
+
+func (r *Room) broadcastMessage(msgType string, payload any) {
+	log.Printf("🔄 broadcastMessage: Creating message type '%s' for room %s", msgType, r.ID)
+
+	message, err := createWebSocketMessage(msgType, payload)
 	if err != nil {
-		log.Printf("ERROR: Failed to create game_state_update message: %v", err)
+		log.Printf("❌ broadcastMessage: Failed to create message '%s': %v", msgType, err)
 		return
 	}
 
-	// Itera sobre una copia del mapa de clientes para evitar problemas de concurrencia
-	// si un cliente se desconecta mientras se está transmitiendo.
 	r.mu.RLock()
 	clientsCopy := make([]*Client, 0, len(r.Clients))
 	for _, client := range r.Clients {
@@ -334,14 +500,18 @@ func (r *Room) broadcastStateUpdate() {
 	}
 	r.mu.RUnlock()
 
-	for _, client := range clientsCopy {
-		// Envío no bloqueante para evitar que un cliente lento bloquee a todos los demás.
+	log.Printf("🔄 broadcastMessage: Broadcasting '%s' to %d clients", msgType, len(clientsCopy))
+
+	for i, client := range clientsCopy {
 		select {
 		case client.send <- message:
+			log.Printf("✅ broadcastMessage: Sent '%s' to client %d: %s", msgType, i, client.displayName)
 		default:
-			log.Printf("WARN: Client %s send channel is full. Dropping message.", client.id)
+			log.Printf("⚠️  broadcastMessage: Client %s send channel full for message '%s'", client.displayName, msgType)
 		}
 	}
+
+	log.Printf("✅ broadcastMessage: Completed broadcasting '%s'", msgType)
 }
 
 // -----------------------------------------------------
@@ -373,28 +543,47 @@ func (c *Client) readPump() {
 		switch msg.Type {
 		case "join_room":
 			c.manager.handleJoinRoom(c, msg.Payload)
-		default:
-			// Evita mantener el bloqueo de la sala durante la transmisión.
-			// Primero, maneja el mensaje y luego, si es necesario, transmite el estado.
+		case "make_move":
+			// Manejar movimientos del juego
 			if c.currentRoom != nil {
-				var shouldBroadcast bool
-				c.currentRoom.mu.Lock()
-				err := c.currentRoom.Game.HandleMessage(c, msg.Payload)
-				if err != nil {
-					c.sendError(err.Error())
-				} else {
-					shouldBroadcast = true
-				}
-				c.currentRoom.mu.Unlock()
-
-				if shouldBroadcast {
-					c.currentRoom.broadcastStateUpdate()
-				}
+				c.handleGameMove(msg.Payload)
 			} else {
-				c.sendError(fmt.Sprintf("Unknown message type '%s' or not in a room.", msg.Type))
+				c.sendError("Not in a room.")
 			}
+		default:
+			c.sendError(fmt.Sprintf("Unknown message type '%s'.", msg.Type))
 		}
 	}
+}
+
+func (c *Client) handleGameMove(payload json.RawMessage) {
+	// Determinar índice del jugador
+	var playerIndex int
+	switch c.role {
+	case "player_0":
+		playerIndex = 0
+	case "player_1":
+		playerIndex = 1
+	default:
+		c.sendError("Spectators cannot make moves.")
+		return
+	}
+
+	// Parsear el movimiento (esto dependerá del tipo de juego)
+	var move any
+	if err := json.Unmarshal(payload, &move); err != nil {
+		c.sendError("Invalid move format.")
+		return
+	}
+
+	// Intentar hacer el movimiento
+	if err := c.currentRoom.Game.HandleMove(playerIndex, move); err != nil {
+		c.sendError(err.Error())
+		return
+	}
+
+	// Broadcast del nuevo estado
+	c.currentRoom.broadcastRoomState()
 }
 
 func (c *Client) writePump() {
@@ -435,7 +624,6 @@ func (c *Client) sendError(message string) {
 // -----------------------------------------------------
 
 func createWebSocketMessage(msgType string, payload any) ([]byte, error) {
-	// Serializa el payload a json.RawMessage antes de construir el mensaje final.
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -448,4 +636,48 @@ func generateAliceOrBobName() string {
 	namePrefixes := []string{"Alice", "Bob"}
 	prefix := namePrefixes[rand.Intn(len(namePrefixes))]
 	return fmt.Sprintf("%s#%d", prefix, rand.Intn(9000)+1000)
+}
+
+// -----------------------------------------------------
+// IMPLEMENTACIÓN TEMPORAL DEL JUEGO
+// -----------------------------------------------------
+
+// TempTicTacToe - Implementación temporal que solo mantiene estado básico
+type TempTicTacToe struct {
+	board       [9]string
+	currentTurn int
+	winner      string
+	gameStarted bool
+	moves       int
+}
+
+func (t *TempTicTacToe) HandleMove(playerIndex int, move any) error {
+	// Por ahora solo retorna nil - implementar después
+	return nil
+}
+
+func (t *TempTicTacToe) GetGameState() any {
+	return map[string]any{
+		"board":       t.board,
+		"currentTurn": t.currentTurn,
+		"winner":      t.winner,
+		"gameStarted": t.gameStarted,
+		"moves":       t.moves,
+	}
+}
+
+func (t *TempTicTacToe) IsGameOver() bool {
+	return t.winner != ""
+}
+
+func (t *TempTicTacToe) GetWinner() string {
+	return t.winner
+}
+
+func (t *TempTicTacToe) Reset() {
+	t.board = [9]string{}
+	t.currentTurn = 0
+	t.winner = ""
+	t.gameStarted = false
+	t.moves = 0
 }

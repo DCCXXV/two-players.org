@@ -25,7 +25,7 @@
 		}
 		onRoomCreate({
 			Name: roomNameValue,
-			GameType: 'Tic Tac Toe',
+			GameType: 'tic-tac-toe',
 			IsPrivate: isPrivateRoom
 		});
 		roomNameValue = $displayName + "'s room";

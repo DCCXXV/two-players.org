@@ -46,7 +46,7 @@ func (s *connectionService) CreateConnection(ctx context.Context, params CreateC
 	}
 
 	// If the error is not sql.ErrNoRows, then it's a real error
-	if err != nil && err.Error() != "no rows in result set" {
+	if err.Error() != "no rows in result set" {
 		return db.ActiveConnection{}, fmt.Errorf("failed to get active connection: %w", err)
 	}
 
