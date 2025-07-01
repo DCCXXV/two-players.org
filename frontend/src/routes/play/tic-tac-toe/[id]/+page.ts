@@ -1,9 +1,18 @@
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params, fetch }) => {
-	const roomId = params.id;
-	const res = await fetch(import.meta.env.VITE_SOCKET_URL + `/api/v1/rooms/${roomId}`);
-	const room = await res.json();
+	try {
+		const roomId = params.id;
+		const res = await fetch(import.meta.env.VITE_SOCKET_URL + `/api/v1/rooms/${roomId}`);
 
-	return { room };
+		if (!res.ok) {
+			const errorData = await res.json().catch(() => ({ message: `HTTP error! status: ${res.status}` }));
+			return { room: null, error: errorData.error || errorData.message };
+		}
+
+		const room = await res.json();
+		return { room, error: null };
+	} catch (e) {
+		return { room: null, error: e instanceof Error ? e.message : 'An unknown error occurred' };
+	}
 };

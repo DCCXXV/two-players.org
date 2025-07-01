@@ -6,15 +6,27 @@
 		connectWebSocket,
 		disconnectWebSocket,
 		isConnected,
-		displayName
+		displayName,
+		gameState
 	} from '$lib/socketStore';
 
 	onMount(() => {
 		console.log('Layout onMount: Attempting to call connectWebSocket...');
 		connectWebSocket();
 
+		const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+			// Only show confirmation if the user is in a game room.
+			if ($gameState && page.url.pathname.includes('/play/tic-tac-toe/')) {
+				event.preventDefault();
+				event.returnValue = 'Are you sure you want to leave the room?';
+			}
+		};
+
+		window.addEventListener('beforeunload', handleBeforeUnload);
+
 		return () => {
 			console.log('Layout onDestroy: Calling disconnectWebSocket');
+			window.removeEventListener('beforeunload', handleBeforeUnload);
 			disconnectWebSocket();
 		};
 	});

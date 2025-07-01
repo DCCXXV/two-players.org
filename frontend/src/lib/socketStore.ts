@@ -13,6 +13,8 @@ export const displayName: Writable<string> = writable('');
 export const gameState: Writable<any> = writable(null);
 export const players: Writable<string[]> = writable([]);
 export const errorMessage: Writable<string | null> = writable(null);
+export const roomClosedMessage: Writable<string | null> = writable(null);
+
 let socketInstance: WebSocket | null = null;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
@@ -46,7 +48,9 @@ export function connectWebSocket(): void {
 		if (reconnectAttempts < maxReconnectAttempts) {
 			reconnectAttempts++;
 			console.log(
-				`WebSocket closed. Attempting reconnect ${reconnectAttempts}/${maxReconnectAttempts} in ${reconnectInterval / 1000}s...`
+				`WebSocket closed. Attempting reconnect ${reconnectAttempts}/${maxReconnectAttempts} in ${
+					reconnectInterval / 1000
+				}s...`
 			);
 			setTimeout(connectWebSocket, reconnectInterval);
 		} else {
@@ -90,6 +94,14 @@ export function connectWebSocket(): void {
 
 				case 'join_success':
 					console.log('✅ Successfully joined room:', message.payload);
+					break;
+
+				case 'room_closed':
+					console.log('🚪 Room closed by host:', message.payload);
+					roomClosedMessage.set(message.payload.message || 'The host has left the room.');
+					// Reset game state as well
+					gameState.set(null);
+					players.set([]);
 					break;
 
 				case 'error':

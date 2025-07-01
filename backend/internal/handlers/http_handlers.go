@@ -110,8 +110,13 @@ func (h *HTTPHandler) GetRoom(c *gin.Context) {
 
 	room, err := h.roomService.GetRoomByID(ctx, roomID)
 	if err != nil {
-		log.Printf("ERROR: Failed to get room %s: %v", roomIDStr, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve room"})
+		if err == service.ErrRoomNotFound { // Check for specific error
+			log.Printf("INFO: Room not found: %s", roomIDStr)
+			c.JSON(http.StatusNotFound, gin.H{"error": "Room not found"})
+		} else {
+			log.Printf("ERROR: Failed to get room %s: %v", roomIDStr, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve room"})
+		}
 		return
 	}
 

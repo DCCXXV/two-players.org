@@ -2,14 +2,18 @@ package service
 
 import (
 	"context"
+	"errors" // Importar el paquete de errores
 	"fmt"
 	"log"
 
 	db "github.com/DCCXXV/twoplayers/backend/db/sqlc"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool" // NUEVO: Necesario para las transacciones
+	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+var ErrRoomNotFound = errors.New("room not found")
 
 // NUEVO: Struct para los parámetros de entrada de JoinRoom
 type JoinRoomInput struct {
@@ -67,7 +71,14 @@ func (s *roomService) CreateRoom(ctx context.Context, params CreateRoomParams) (
 }
 
 func (s *roomService) GetRoomByID(ctx context.Context, roomID uuid.UUID) (db.Room, error) {
-	return s.queries.GetRoomByID(ctx, pgtype.UUID{Bytes: roomID, Valid: true})
+	room, err := s.queries.GetRoomByID(ctx, pgtype.UUID{Bytes: roomID, Valid: true})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.Room{}, ErrRoomNotFound
+		}
+		return db.Room{}, err
+	}
+	return room, nil
 }
 
 func (s *roomService) DeleteRoom(ctx context.Context, roomID uuid.UUID) error {

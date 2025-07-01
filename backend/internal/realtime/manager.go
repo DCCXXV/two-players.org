@@ -235,21 +235,26 @@ func (m *Manager) registerClient(client *Client) {
 }
 
 func (m *Manager) unregisterClient(client *Client) {
+	log.Printf("Realtime State: Attempting to unregister client %s (%s). Current room: %v", client.id, client.displayName, client.currentRoom != nil)
 	if client.currentRoom != nil {
+		log.Printf("Realtime State: Client %s (%s) was in room %s. Calling removeClient.", client.displayName, client.id, client.currentRoom.ID)
 		client.currentRoom.removeClient(client)
 	}
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	log.Printf("Realtime State: Before unregistering client %s, total clients: %d", client.id, len(m.clients))
 	if _, ok := m.clients[client.id]; ok {
 		delete(m.clients, client.id)
 		close(client.send)
-		log.Printf("Realtime State: Unregistered client %s (%s)", client.id, client.displayName)
+		log.Printf("Realtime State: Successfully unregistered client %s (%s). Total clients now: %d", client.id, client.displayName, len(m.clients))
 
 		if client.displayName != "" {
 			go m.cleanupConnectionDB(client.displayName)
 		}
+	} else {
+		log.Printf("Realtime State: Client %s (%s) not found in manager's clients map.", client.id, client.displayName)
 	}
 }
 
@@ -424,22 +429,59 @@ func (r *Room) addClient(client *Client) {
 
 func (r *Room) removeClient(client *Client) {
 	r.mu.Lock()
-	defer r.mu.Unlock()
+	defer r.mu.Unlock() // Ensure unlock happens
 
-	if _, ok := r.Clients[client.id]; ok {
-		delete(r.Clients, client.id)
-		client.currentRoom = nil
+	log.Printf("Room %s: removeClient called for client %s (%s). Host: %s. Current clients in room: %d", r.ID, client.displayName, client.id, r.HostName, len(r.Clients))
 
-		log.Printf("Client %s left room %s", client.displayName, r.ID)
+	if _, ok := r.Clients[client.id]; !ok {
+		log.Printf("Room %s: Client %s not found in room. Aborting removeClient.", r.ID, client.displayName)
+		return // Client not in room
+	}
 
-		if len(r.Clients) == 0 {
-			r.manager.mu.Lock()
-			delete(r.manager.rooms, r.ID)
-			r.manager.mu.Unlock()
-			log.Printf("Room %s is now empty and has been removed.", r.ID)
-		} else {
-			r.broadcastRoomState()
+	isHost := client.displayName == r.HostName
+	log.Printf("Room %s: Client %s is host: %t", r.ID, client.displayName, isHost)
+
+	delete(r.Clients, client.id)
+	client.currentRoom = nil
+	log.Printf("Room %s: Client %s removed. Remaining clients in room: %d", r.ID, client.displayName, len(r.Clients))
+
+	// If the host leaves, the room is closed for everyone.
+	if isHost {
+		log.Printf("Room %s: Host %s left. Closing room for all remaining clients.", r.ID, client.displayName)
+
+		// Notify remaining clients and clear their room association
+		for _, otherClient := range r.Clients {
+			log.Printf("Room %s: Notifying client %s about room closure.", r.ID, otherClient.displayName)
+			otherClient.sendMessage("room_closed", map[string]string{"message": "The host has left the room."})
+			otherClient.currentRoom = nil
 		}
+
+		// Clear the clients map for this room
+		r.Clients = make(map[uuid.UUID]*Client) // This effectively empties the map
+
+		log.Printf("Room %s: All clients notified and room client map cleared. Remaining clients in room (after clear): %d", r.ID, len(r.Clients))
+
+		// Remove the room from the manager's list of active rooms
+		r.manager.mu.Lock()
+		log.Printf("Manager: Before deleting room %s, total rooms: %d", r.ID, len(r.manager.rooms))
+		delete(r.manager.rooms, r.ID)
+		log.Printf("Manager: Room %s deleted. Total rooms now: %d", r.ID, len(r.manager.rooms))
+		r.manager.mu.Unlock()
+		log.Printf("Room %s closed and removed from memory because host left.", r.ID)
+
+	} else if len(r.Clients) == 0 {
+		log.Printf("Room %s: Last non-host client %s left. Room is now empty.", r.ID, client.displayName)
+		// If the last client (who wasn't the host) leaves, the room is also removed.
+		r.manager.mu.Lock()
+		log.Printf("Manager: Before deleting room %s, total rooms: %d", r.ID, len(r.manager.rooms))
+		delete(r.manager.rooms, r.ID)
+		log.Printf("Manager: Room %s deleted. Total rooms now: %d", r.ID, len(r.manager.rooms))
+		r.manager.mu.Unlock()
+		log.Printf("Room %s is now empty and has been removed from memory.", r.ID)
+	} else {
+		// A non-host client left, just update the state for everyone else.
+		log.Printf("Room %s: Non-host client %s left. Broadcasting updated room state.", r.ID, client.displayName)
+		r.broadcastRoomState()
 	}
 }
 

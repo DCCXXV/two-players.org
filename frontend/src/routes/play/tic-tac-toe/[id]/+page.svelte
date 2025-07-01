@@ -4,19 +4,23 @@
 		displayName,
 		sendWebSocketMessage,
 		players,
-		gameState
+		gameState,
+		roomClosedMessage
 	} from '$lib/socketStore';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	export let data;
 
 	let hasJoined = false;
 
-	// Debug logs temporales
-	$: console.log('🎮 Frontend gameState:', $gameState);
-	$: console.log('👥 Frontend players:', $players);
+	$: if ($roomClosedMessage) {
+		alert($roomClosedMessage); // Show an alert when the room is closed
+		$roomClosedMessage = null; // Reset the message
+		goto('/play/tic-tac-toe'); // Redirect to the lobby
+	}
 
-	$: if ($isConnected && $displayName && !hasJoined) {
+	$: if ($isConnected && $displayName && !hasJoined && data.room) {
 		hasJoined = true;
 		sendWebSocketMessage({
 			type: 'join_room',
@@ -27,7 +31,13 @@
 	}
 </script>
 
-{#if $gameState}
+{#if data.error}
+	<div class="text-center">
+		<h1 class="h3 lora-700 text-error-400 mb-8">Room Not Found</h1>
+		<!-- <p class="text-surface-400 mb-4">{data.error}</p> -->
+		<a href="/play/tic-tac-toe" class="btn bg-primary-400">Go to Lobby</a>
+	</div>
+{:else if $gameState}
 	<h1 class="h3 lora-700 text-primary-400">{data.room.name}</h1>
 	<p class="text-surface-500 mb-4">
 		ID: {data.room.id} · Status: {$gameState.canStart
@@ -71,5 +81,10 @@
 		{:else}
 			<p class="text-surface-400">No players yet...</p>
 		{/if}
+	</div>
+{:else}
+	<div class="text-center">
+		<h1 class="h3 lora-700 text-warning-400">Loading Room...</h1>
+		<p class="text-surface-400 mb-4">Connecting to the room, please wait.</p>
 	</div>
 {/if}
