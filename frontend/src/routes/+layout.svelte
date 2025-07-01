@@ -40,7 +40,7 @@
 	>
 		<div class="flex h-full items-center">
 			<a
-				class="text-surface-500 hover:brightness-80 lora-700 me-6 pb-2 text-2xl font-bold"
+				class="text-surface-500 lora-700 me-6 pb-2 text-2xl font-bold hover:brightness-80"
 				href="/"
 			>
 				<span class="text-primary-400">two</span><span class="text-surface-500">-</span><span
@@ -92,9 +92,14 @@
 		<div class="flex gap-6">
 			<!--<button class="btn preset-filled-surface-500 text-surface-100"> Change Display Name </button>-->
 			{#if $isConnected && $displayName}
-				<input type="text" readonly class="input text-lg text-primary-400 bg-surface-900 max-w-35 text-center lora-400 rounded-none" value={$displayName}>
+				<input
+					type="text"
+					readonly
+					class="input text-primary-400 bg-surface-900 lora-400 max-w-35 rounded-none text-center text-lg"
+					value={$displayName}
+				/>
 			{:else if $isConnected}
-				<span class="text-xl text-primary-400">Loading...</span>
+				<span class="text-primary-400 text-xl">Loading...</span>
 			{/if}
 			<!--
 			<a aria-label="github repository" href="https://github.com/DCCXXV/two-players.org">
@@ -121,7 +126,26 @@
 			{@render children()}
 		</main>
 	</div>
-	<footer class="p-8"></footer>
+	<footer class="text-surface-400 bg-surface-900 p-8 text-center">
+		<nav class="flex justify-center space-x-4">
+			<a href="/privacy-policy" class="hover:text-primary-400 transition-colors duration-200"
+				>Privacy Policy</a
+			>
+			<a href="/terms-of-service" class="hover:text-primary-400 transition-colors duration-200"
+				>Terms of Service</a
+			>
+			<a
+				href="https://github.com/DCCXXV/two-players.org"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="hover:text-primary-400 transition-colors duration-200">GitHub</a
+			>
+			<a href="/contact" class="hover:text-primary-400 transition-colors duration-200">Contact</a>
+		</nav>
+		<p class="mt-4 text-sm">
+			&copy; {new Date().getFullYear()} two-players.org. All rights reserved.
+		</p>
+	</footer>
 </div>
 
 <style>

@@ -45,42 +45,48 @@
 			: 'Waiting for players...'}
 		({$gameState.playerCount}/{$gameState.maxPlayers} players)
 	</p>
+	<div class="flex justify-between gap-4">
+		<div class="w-1/5">
+			<div>
+				{#if $gameState?.players?.length > 0}
+					<div class="border-surface-400 border-2">
+						<div
+							class="text-primary-400 bg-surface-800 b border-surface-400 border-b-2 p-2 font-bold"
+						>
+							P1: <span class="text-surface-200">{$gameState.players[0] || 'Waiting...'}</span>
+						</div>
+						<div class="text-secondary-400 bg-surface-800 p-2 font-bold">
+							P2: <span class="text-surface-200">{$gameState.players[1] || 'Waiting...'}</span>
+						</div>
+					</div>
+					<!-- Espectadores si existen -->
+					{#if $gameState.spectatorCount > 0}
+						<details class="bg-surface-800 border-surface-400 mt-4 border-2 p-2">
+							<summary class="text-surface-200 cursor-pointer font-bold">
+								Spectators ({$gameState.spectatorCount})
+							</summary>
 
-	<div>
-		{#if $gameState?.players?.length > 0}
-			<div class="border-surface-400 border-2">
-				<div class="text-primary-400 bg-surface-800 b border-surface-400 border-b-2 p-2 font-bold">
-					P1: <span class="text-surface-200">{$gameState.players[0] || 'Waiting...'}</span>
-				</div>
-				<div class="text-secondary-400 bg-surface-800 p-2 font-bold">
-					P2: <span class="text-surface-200">{$gameState.players[1] || 'Waiting...'}</span>
-				</div>
-			</div>
-			<!-- Espectadores si existen -->
-			{#if $gameState.spectatorCount > 0}
-				<details class="bg-surface-800 border-surface-400 mt-4 border-2 p-2">
-					<summary class="h6 lora-700 text-surface-200 cursor-pointer">
-						Spectators ({$gameState.spectatorCount})
-					</summary>
+							<ul class=" text-surface-200 p-1 text-sm">
+								{#each $gameState.spectators as spectator}
+									<li class="py-1">👁️ {spectator}</li>
+								{/each}
+							</ul>
+						</details>
+					{/if}
 
-					<ul class="bg-surface-950 text-surface-200 mt-2 p-1 text-sm">
-						{#each $gameState.spectators as spectator}
-							<li class="py-1">👁️ {spectator}</li>
-						{/each}
-					</ul>
-				</details>
-			{/if}
-
-			<!-- Debug info temporal -->
-			<details class="mt-4">
-				<summary class="text-surface-400 cursor-pointer text-sm">Debug Info</summary>
-				<pre class="bg-surface-900 mt-2 overflow-auto rounded p-2 text-xs">
+					<!-- Debug info temporal -->
+					<details class="mt-4">
+						<summary class="text-surface-400 cursor-pointer text-sm">Debug Info</summary>
+						<pre class="bg-surface-900 mt-2 overflow-auto rounded p-2 text-xs">
 			    {JSON.stringify($gameState, null, 2)}
             </pre>
-			</details>
-		{:else}
-			<p class="text-surface-400">No players yet...</p>
-		{/if}
+					</details>
+				{:else}
+					<p class="text-surface-400">No players yet...</p>
+				{/if}
+			</div>
+		</div>
+		<div class="bg-surface-900 w-4/5"></div>
 	</div>
 {:else}
 	<div class="text-center">

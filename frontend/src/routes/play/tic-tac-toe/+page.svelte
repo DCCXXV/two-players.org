@@ -59,8 +59,11 @@
 		GameType: string;
 		IsPrivate: boolean;
 	}) {
+		console.group('handleRoomCreation()');
 		isCreatingRoom = true;
+		console.log('isCreatingRoom set to true');
 		try {
+			console.log('Attempting to fetch ' + import.meta.env.VITE_SOCKET_URL + '/api/v1/rooms');
 			const response = await fetch(import.meta.env.VITE_SOCKET_URL + '/api/v1/rooms', {
 				method: 'POST',
 				headers: {
@@ -73,6 +76,11 @@
 					is_private: options.IsPrivate
 				})
 			});
+			console.log('Fetch response received:', {
+				ok: response.ok,
+				status: response.status,
+				statusText: response.statusText
+			});
 
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({ message: 'Failed to create room' }));
@@ -80,11 +88,16 @@
 			}
 
 			const newRoom = await response.json();
+			console.log('Room created successfully:', newRoom);
+			console.log('Navigating to:', `/play/tic-tac-toe/${newRoom.id}`);
 			goto(`/play/tic-tac-toe/${newRoom.id}`);
 		} catch (error) {
+			console.error('Error creating room:', error);
 			alert(`Error creating room: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		} finally {
 			isCreatingRoom = false;
+			console.log('isCreatingRoom set to false');
+			console.groupEnd();
 		}
 	}
 

@@ -10,14 +10,14 @@
 @source '../node_modules/@skeletonlabs/skeleton-svelte/dist';
 
 .lora-700 {
-	font-family: "Lora", serif;
+	font-family: 'Lora', serif;
 	font-optical-sizing: auto;
 	font-weight: 700;
 	font-style: normal;
 }
 
 .lora-400 {
-	font-family: "Lora", serif;
+	font-family: 'Lora', serif;
 	font-optical-sizing: auto;
 	font-weight: 400;
 	font-style: normal;
@@ -32,7 +32,7 @@
 	}
 
 	@media (min-width: 1800px) and (orientation: landscape) {
-	  	.xl-landscape\:px-16 {
+		.xl-landscape\:px-16 {
 			padding-left: 8rem;
 			padding-right: 8rem;
 		}
@@ -42,7 +42,7 @@
 	--text-scaling: 1.067;
 	--base-font-color: var(--color-surface-950);
 	--base-font-color-dark: var(--color-surface-50);
-	--base-font-family: "Inter", sans-serif;
+	--base-font-family: 'Inter', sans-serif;
 	--base-font-size: inherit;
 	--base-line-height: inherit;
 	--base-font-weight: normal;
