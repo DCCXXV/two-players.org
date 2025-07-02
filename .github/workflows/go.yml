@@ -25,9 +25,7 @@ jobs:
         run: |
           echo "--- Go Modules Step Debug ---"
           echo "Current directory: ${PWD}"
-          # go mod tidy limpia y sincroniza el archivo go.mod y go.sum
           go mod tidy
-          # go mod download descarga todas las dependencias
           go mod download
           echo "--- End Go Modules Step Debug ---"
 
@@ -43,8 +41,6 @@ jobs:
           echo "Listing parent directory (repo root) BEFORE build:"
           ls -la ..
           echo "Building for $GOOS/$GOARCH..."
-          # Build the package located in ./cmd/server/ (relative to ./backend)
-          # Output the binary to ../ (repository root) named according to the variable
           go build -v -o ../${{ vars.BINARY_NAME }} ./cmd/server/
           BUILD_EXIT_CODE=$?
           echo "go build command finished with exit code: ${BUILD_EXIT_CODE}"
@@ -53,7 +49,6 @@ jobs:
           echo "Listing parent directory (repo root) AFTER build:"
           ls -la ..
           echo "--- End Build Step Debug ---"
-          # Explicitly check the build exit code
           if [ ${BUILD_EXIT_CODE} -ne 0 ]; then
             echo "Go build failed!"
             exit ${BUILD_EXIT_CODE}
@@ -83,7 +78,7 @@ jobs:
           MIGRATIONS_DIR_NAME="migrations"
           MIGRATIONS_VPS_PATH="${DEPLOY_PATH}/${MIGRATIONS_DIR_NAME}"
           VPS_TARGET="${VPS_USER}@${VPS_HOST}"
-          MIGRATE_CMD="/usr/local/bin/migrate" # Asegúrate de que esta ruta es correcta en tu VPS
+          MIGRATE_CMD="/usr/local/bin/migrate"
           # --- Prepare Remote Directories ---
           echo "Ensuring remote directories exist on ${VPS_TARGET}..."
           ssh -o StrictHostKeyChecking=no ${VPS_TARGET} "mkdir -p ${DEPLOY_PATH} && mkdir -p ${MIGRATIONS_VPS_PATH}"
@@ -107,11 +102,13 @@ jobs:
           else
             echo "Error: Local migrations path ${MIGRATIONS_LOCAL_PATH} not found!"; exit 1
           fi
-          # --- Run Migrations, Configure Environment, and Restart Service Remotely ---
+          # --- Run Commands Remotely with Enhanced Debugging ---
           echo "Running commands remotely on ${VPS_TARGET}..."
+          # Start of SSH command block
+          # IMPORTANT DEBUGGING CHANGE: Removed 'set -e' for now to allow all commands to run and report their errors.
+          # We will explicitly check exit codes for critical commands.
           ssh -o StrictHostKeyChecking=no ${VPS_TARGET} "
-            # Exit immediately if a command exits with a non-zero status.
-            set -e
+            echo '--- Remote Execution Start (Debug Mode) ---'
 
             # Export variables needed within this script block
             export DATABASE_URL='${DATABASE_URL}'
@@ -119,12 +116,17 @@ jobs:
             export SERVICE_NAME='${SERVICE_NAME}'
             export MIGRATE_CMD='${MIGRATE_CMD}'
             export MIGRATIONS_VPS_PATH='${MIGRATIONS_VPS_PATH}'
+            export DEPLOY_PATH='${DEPLOY_PATH}' # Ensure DEPLOY_PATH is available for chmod/chown if needed
+            export BINARY_VPS_PATH='${BINARY_VPS_PATH}' # Ensure BINARY_VPS_PATH is available
 
-            echo '--- Remote Execution Start ---'
+            echo 'Changing permissions for the deployed binary...'
+            # Make the binary executable
+            sudo chmod +x \"\${BINARY_VPS_PATH}\"
+            # Optional: Ensure the binary is owned by the correct user if needed
+            # sudo chown someuser:somegroup \"\${BINARY_VPS_PATH}\"
 
             # --- Run Migrations ---
             echo 'Running database migrations...'
-
             if [ -z \"\$DATABASE_URL\" ]; then echo 'Error: DATABASE_URL secret is not set or empty!'; exit 1; fi
             echo \"Using migration path: ${MIGRATIONS_VPS_PATH}\"
 
@@ -136,40 +138,44 @@ jobs:
                 VERSION=\$(echo \"\$MIGRATION_OUTPUT\" | grep -oP 'Dirty database version \K[0-9]+')
                 if [ -n \"\$VERSION\" ]; then
                   echo \"Detected dirty database version \${VERSION}. Attempting to force clean...\"
-                  ${MIGRATE_CMD} -database \"\$DATABASE_URL\" -path \"${MIGRATIONS_VPS_PATH}\" force \"\${VERSION}\"
+                  ${MIGRATE_CMD} -database \"\$DATABASE_URL\" -path \"${MIGRATIONS_VPS_PATH}\" force \"\${VERSION}\" || { echo 'Error forcing migration version!'; exit 1; }
                   echo \"Forced version \${VERSION} to clean. Retrying migrations...\"
-                  ${MIGRATE_CMD} -database \"\$DATABASE_URL\" -path \"${MIGRATIONS_VPS_PATH}\" up
+                  ${MIGRATE_CMD} -database \"\$DATABASE_URL\" -path \"${MIGRATIONS_VPS_PATH}\" up || { echo 'Error re-running migrations after force!'; exit 1; }
                   echo 'Migrations applied successfully after force clean.'
                 else
-                  echo \"Error: Could not extract dirty version from output. Manual intervention might be needed.\"
+                  echo \"Error: Could not extract dirty version from output for force command.\"
                   echo \"Migration output: \n\$MIGRATION_OUTPUT\"
+                  exit 1
                 fi
               else
                 echo \"Error: Migrations failed for an unexpected reason.\"
                 echo \"Migration output: \n\$MIGRATION_OUTPUT\"
-                exit 1 # Sale con error
+                exit 1
               fi
             else
-              echo 'Migrations applied successfully.' # Si no hubo error inicial
+              echo 'Migrations applied successfully.'
             fi
 
             # --- Configure Systemd Override for Environment Variables ---
             echo 'Configuring environment variables for service (${SERVICE_NAME})...'
             OVERRIDE_DIR=\"/etc/systemd/system/${SERVICE_NAME}.service.d\"
             OVERRIDE_FILE=\"\${OVERRIDE_DIR}/override.conf\"
-            # Create the override directory
-            sudo mkdir -p \"\${OVERRIDE_DIR}\"
-            printf \"[Service]\\nEnvironment=\\\"DATABASE_URL=%s\\\"\\nEnvironment=\\\"ALLOWED_ORIGINS=%s\\\"\\n\" \"\$DATABASE_URL\" \"\$ALLOWED_ORIGINS\" | sudo tee \"\${OVERRIDE_FILE}\" > /dev/null
+
+            # Create the override directory (fail if sudo fails)
+            sudo mkdir -p \"\${OVERRIDE_DIR}\" || { echo 'Error creating systemd override directory!'; exit 1; }
+
+            printf \"[Service]\\nEnvironment=\\\"DATABASE_URL=%s\\\"\\nEnvironment=\\\"ALLOWED_ORIGINS=%s\\\"\\n\" \"\$DATABASE_URL\" \"\$ALLOWED_ORIGINS\" | sudo tee \"\${OVERRIDE_FILE}\" > /dev/null || { echo 'Error writing systemd override file!'; exit 1; }
             echo \"Systemd override file created/updated at \${OVERRIDE_FILE}\"
-            # Optional: Display the content for verification
-            # sudo cat \"\${OVERRIDE_FILE}\"
-            # Reload systemd manager configuration
+
+            # Reload systemd manager configuration (fail if sudo fails)
             echo 'Reloading systemd daemon...'
-            sudo systemctl daemon-reload
+            sudo systemctl daemon-reload || { echo 'Error reloading systemd daemon!'; exit 1; }
+
             # --- Restart Service ---
             echo 'Restarting service (${SERVICE_NAME})...'
-            sudo systemctl restart ${SERVICE_NAME}
+            sudo systemctl restart ${SERVICE_NAME} || { echo 'Error restarting service!'; exit 1; }
             echo 'Service restarted successfully.'
+
             echo '--- Remote Execution End ---'
             echo 'Deployment successful!'
           "
