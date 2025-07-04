@@ -9,6 +9,8 @@
 	} from '$lib/socketStore';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import Board from '$lib/components/tictactoe/Board.svelte';
+	import GameStatus from '$lib/components/tictactoe/GameStatus.svelte';
 
 	export let data;
 
@@ -26,6 +28,17 @@
 			type: 'join_room',
 			payload: {
 				roomId: data.room.id
+			}
+		});
+	}
+
+	$: myTurn = $gameState?.players[$gameState?.game.currentTurn] === $displayName;
+
+	function onMove(cellIndex: number) {
+		sendWebSocketMessage({
+			type: 'make_move',
+			payload: {
+				cellIndex: cellIndex
 			}
 		});
 	}
@@ -78,15 +91,18 @@
 					<details class="mt-4">
 						<summary class="text-surface-400 cursor-pointer text-sm">Debug Info</summary>
 						<pre class="bg-surface-900 mt-2 overflow-auto rounded p-2 text-xs">
-			    {JSON.stringify($gameState, null, 2)}
-            </pre>
+         			        {JSON.stringify($gameState, null, 2)}
+                        </pre>
 					</details>
 				{:else}
 					<p class="text-surface-400">No players yet...</p>
 				{/if}
 			</div>
 		</div>
-		<div class="bg-surface-900 w-4/5"></div>
+		<div class="w-4/5">
+			<Board board={$gameState.game.board} disabled={!myTurn || $gameState.game.winner} {onMove} />
+			<GameStatus gameState={$gameState} {myTurn}></GameStatus>
+		</div>
 	</div>
 {:else}
 	<div class="text-center">

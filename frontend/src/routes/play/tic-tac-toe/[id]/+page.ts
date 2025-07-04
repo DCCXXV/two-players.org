@@ -6,7 +6,9 @@ export const load: PageLoad = async ({ params, fetch }) => {
 		const res = await fetch(import.meta.env.VITE_SOCKET_URL + `/api/v1/rooms/${roomId}`);
 
 		if (!res.ok) {
-			const errorData = await res.json().catch(() => ({ message: `HTTP error! status: ${res.status}` }));
+			const errorData = await res
+				.json()
+				.catch(() => ({ message: `HTTP error! status: ${res.status}` }));
 			return { room: null, error: errorData.error || errorData.message };
 		}
 
