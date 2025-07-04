@@ -126,7 +126,7 @@
 			{@render children()}
 		</main>
 	</div>
-	<footer class="text-surface-400 bg-surface-900 p-8 text-center">
+	<footer class="text-surface-400 bg-surface-900 mt-4 p-8 text-center">
 		<nav class="flex justify-center space-x-4">
 			<a href="/privacy-policy" class="hover:text-primary-400 transition-colors duration-200"
 				>Privacy Policy</a

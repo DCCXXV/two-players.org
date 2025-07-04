@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/DCCXXV/twoplayers/backend/internal/config"
+	"github.com/DCCXXV/twoplayers/backend/internal/games" // Importar el nuevo paquete de juegos
 	"github.com/DCCXXV/twoplayers/backend/internal/service"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -53,14 +54,8 @@ type Manager struct {
 }
 
 // GameInstance es una interfaz que cada juego debe implementar.
-type GameInstance interface {
-	// Solo maneja la lógica pura del juego
-	HandleMove(playerIndex int, move any) error
-	GetGameState() any // Tablero, turno, ganador, etc.
-	IsGameOver() bool
-	GetWinner() string
-	Reset()
-}
+// Ahora se refiere a la interfaz games.Game del paquete games.
+type GameInstance = games.Game
 
 // Room representa una sala de juego activa en memoria.
 type Room struct {
@@ -318,12 +313,10 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 		}
 
 		var game GameInstance
-		switch dbRoom.GameType {
-		case "tic-tac-toe":
-			game = &TempTicTacToe{}
-		default:
+		game, err = games.NewGame(dbRoom.GameType)
+		if err != nil {
 			m.mu.Unlock()
-			client.sendError(fmt.Sprintf("Game type '%s' not supported", dbRoom.GameType))
+			client.sendError(fmt.Sprintf("Error creating game instance: %v", err))
 			return
 		}
 
@@ -680,46 +673,4 @@ func generateAliceOrBobName() string {
 	return fmt.Sprintf("%s#%d", prefix, rand.Intn(9000)+1000)
 }
 
-// -----------------------------------------------------
-// IMPLEMENTACIÓN TEMPORAL DEL JUEGO
-// -----------------------------------------------------
 
-// TempTicTacToe - Implementación temporal que solo mantiene estado básico
-type TempTicTacToe struct {
-	board       [9]string
-	currentTurn int
-	winner      string
-	gameStarted bool
-	moves       int
-}
-
-func (t *TempTicTacToe) HandleMove(playerIndex int, move any) error {
-	// Por ahora solo retorna nil - implementar después
-	return nil
-}
-
-func (t *TempTicTacToe) GetGameState() any {
-	return map[string]any{
-		"board":       t.board,
-		"currentTurn": t.currentTurn,
-		"winner":      t.winner,
-		"gameStarted": t.gameStarted,
-		"moves":       t.moves,
-	}
-}
-
-func (t *TempTicTacToe) IsGameOver() bool {
-	return t.winner != ""
-}
-
-func (t *TempTicTacToe) GetWinner() string {
-	return t.winner
-}
-
-func (t *TempTicTacToe) Reset() {
-	t.board = [9]string{}
-	t.currentTurn = 0
-	t.winner = ""
-	t.gameStarted = false
-	t.moves = 0
-}

@@ -8,6 +8,7 @@ import (
 	db "github.com/DCCXXV/twoplayers/backend/db/sqlc"
 	"github.com/DCCXXV/twoplayers/backend/internal/config"
 	"github.com/DCCXXV/twoplayers/backend/internal/database"
+	_ "github.com/DCCXXV/twoplayers/backend/internal/games"
 	"github.com/DCCXXV/twoplayers/backend/internal/handlers"
 	appLogger "github.com/DCCXXV/twoplayers/backend/internal/logger"
 	"github.com/DCCXXV/twoplayers/backend/internal/realtime"
