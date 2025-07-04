@@ -11,7 +11,14 @@
 	const playAsOptions = ['Random', 'X', 'O'];
 	let selectedPlayAs = $state(playAsOptions[0]);
 	let isPrivateRoom = $state(false);
-	let roomNameValue = $state($displayName + "'s room");
+	let roomNameValue = $state('');
+	let userHasEditedName = false;
+
+	$effect(() => {
+		if ($displayName && !userHasEditedName) {
+			roomNameValue = $displayName + "'s room";
+		}
+	});
 
 	function setPlayAs(selected: string) {
 		selectedPlayAs = selected;
@@ -28,7 +35,8 @@
 			GameType: 'tic-tac-toe',
 			IsPrivate: isPrivateRoom
 		});
-		roomNameValue = $displayName + "'s room";
+		userHasEditedName = false;
+		roomNameValue = $displayName ? $displayName + "'s room" : '';
 		selectedPlayAs = playAsOptions[0];
 		isPrivateRoom = false;
 	}
@@ -43,6 +51,7 @@
 			type="text"
 			placeholder={'Name of the room'}
 			bind:value={roomNameValue}
+			oninput={() => (userHasEditedName = true)}
 		/>
 		<div class="flex items-center justify-between">
 			<div class="flex">
