@@ -41,7 +41,10 @@
 		class="border-surface-500 xl-landscape:px-16 flex min-h-14 flex-wrap justify-between gap-4 border-b-2 px-4 py-2 sm:justify-between sm:py-0"
 	>
 		<div class="flex w-full justify-between sm:w-auto">
-			<a class="text-surface-500 lora-700 text-2xl font-bold hover:brightness-80" href="/">
+			<a
+				class="text-surface-500 lora-700 pt-2 font-bold hover:brightness-80 sm:text-lg md:text-2xl"
+				href="/"
+			>
 				<span class="text-primary-400">two</span><span class="text-surface-500">-</span><span
 					class="text-secondary-400">players</span
 				>.org
@@ -51,13 +54,13 @@
 					<input
 						type="text"
 						readonly
-						class="input text-primary-400 bg-surface-900 lora-400 mr-4 max-w-35 rounded-none text-center text-lg"
+						class="input text-primary-400 bg-surface-900 lora-400 mr-4 max-w-35 rounded-none text-center sm:text-sm md:text-lg"
 						value={$displayName}
 					/>
 				{:else if $isConnected}
 					<span class="text-primary-400 mr-4 text-xl">Loading...</span>
 				{/if}
-				<button class="text-surface-200 text-3xl" onclick={() => (menuOpen = !menuOpen)}>
+				<button class="text-surface-200 text-2xl" onclick={() => (menuOpen = !menuOpen)}>
 					&#9776;
 				</button>
 			</div>
