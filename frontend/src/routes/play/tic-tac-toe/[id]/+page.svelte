@@ -58,8 +58,8 @@
 			: 'Waiting for players...'}
 		({$gameState.playerCount}/{$gameState.maxPlayers} players)
 	</p>
-	<div class="flex justify-between gap-4">
-		<div class="w-1/5">
+	<div class="flex flex-col justify-between gap-4 lg:flex-row">
+		<div class="w-full lg:w-1/5">
 			<div>
 				{#if $gameState?.players?.length > 0}
 					<div class="border-surface-400 border-2">
@@ -99,7 +99,7 @@
 				{/if}
 			</div>
 		</div>
-		<div class="w-4/5">
+		<div class="w-full lg:w-4/5">
 			<Board board={$gameState.game.board} disabled={!myTurn || $gameState.game.winner} {onMove} />
 			<GameStatus gameState={$gameState} {myTurn}></GameStatus>
 		</div>

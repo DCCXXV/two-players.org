@@ -1,6 +1,6 @@
 <section class="mt-4 w-full">
 	<h1 class="lora-700 text-surface-200 h3 mb-6">Current games</h1>
-	<section class="flex items-stretch gap-4">
+	<section class="flex flex-wrap items-stretch gap-4">
 		<!-- Tic-Tac-Toe -->
 		<div class="group relative max-w-xs">
 			<a

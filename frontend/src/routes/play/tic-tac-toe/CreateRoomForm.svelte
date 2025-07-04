@@ -53,8 +53,8 @@
 			bind:value={roomNameValue}
 			oninput={() => (userHasEditedName = true)}
 		/>
-		<div class="flex items-center justify-between">
-			<div class="flex">
+		<div class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+			<div class="flex items-center">
 				<label class="me-4" for="private">Private room: </label>
 				<Switch
 					name="private"
@@ -62,9 +62,9 @@
 					onCheckedChange={(e) => (isPrivateRoom = e.checked)}
 				/>
 			</div>
-			<div class="flex">
-				<label for="private">Play as: </label>
-				<div class="ms-4 flex gap-2">
+			<div class="flex items-center">
+				<label>Play as: </label>
+				<div class="ms-4 flex flex-wrap gap-2">
 					{#each playAsOptions as p}
 						<button
 							type="button"
