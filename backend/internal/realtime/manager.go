@@ -72,11 +72,21 @@ type Room struct {
 // Métodos helper SIN locks para uso interno
 func (r *Room) getPlayersInternal() []*Client {
 	// NO usar locks aquí - se asume que el caller ya tiene el lock
-	var players []*Client
+	var player0, player1 *Client
 	for _, client := range r.Clients {
-		if strings.HasPrefix(client.role, "player_") {
-			players = append(players, client)
+		if client.role == "player_0" {
+			player0 = client
+		} else if client.role == "player_1" {
+			player1 = client
 		}
+	}
+
+	var players []*Client
+	if player0 != nil {
+		players = append(players, player0)
+	}
+	if player1 != nil {
+		players = append(players, player1)
 	}
 	return players
 }
