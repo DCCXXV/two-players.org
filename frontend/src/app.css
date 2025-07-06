@@ -9,6 +9,14 @@
 
 @source '../node_modules/@skeletonlabs/skeleton-svelte/dist';
 
+@font-face {
+	font-family: 'Eraser Dust';
+	src: url('/fonts/erasdust.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}
+
 .lora-700 {
 	font-family: 'Lora', serif;
 	font-optical-sizing: auto;
@@ -21,6 +29,18 @@
 	font-optical-sizing: auto;
 	font-weight: 400;
 	font-style: normal;
+}
+
+.erasdust-400 {
+	font-family: 'Eraser Dust', serif;
+}
+
+.blackboard {
+	background-color: #1d2c29;
+}
+
+.blackboard-darker {
+	background-color: #182220;
 }
 
 @layer utilities {

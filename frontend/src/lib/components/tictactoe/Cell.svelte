@@ -9,8 +9,9 @@
 <button
 	onclick={onClick}
 	{disabled}
-	class="bg-surface-600 hover:bg-surface-500 aspect-square w-full text-5xl font-bold transition-colors disabled:opacity-50
-	{value === 'X' ? 'text-primary-400' : 'text-secondary-400'}"
+	class="blackboard-darker erasdust-400 aspect-square w-full text-7xl font-bold disabled:opacity-100
+	{value === 'X' ? 'text-primary-300' : 'text-secondary-300'}
+	{disabled === true ? 'hover:opacity-100' : 'hover:opacity-50'}"
 >
 	{value}
 </button>

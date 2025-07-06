@@ -63,13 +63,27 @@
 			<div>
 				{#if $gameState?.players?.length > 0}
 					<div class="border-surface-400 border-2">
-						<div
-							class="text-primary-400 bg-surface-800 b border-surface-400 border-b-2 p-2 font-bold"
-						>
-							P1: <span class="text-surface-200">{$gameState.players[0] || 'Waiting...'}</span>
+						<div class="flex">
+							<div
+								class="text-primary-400 bg-surface-900 border-surface-400 w-10 border-e-2 border-b-2 p-2 text-center font-bold"
+							>
+								<span>X</span>
+							</div>
+							<div
+								class="text-primary-400 bg-surface-800 border-surface-400 w-full border-b-2 p-2 font-bold"
+							>
+								<span class="text-surface-200">{$gameState.players[0] || 'Waiting...'}</span>
+							</div>
 						</div>
-						<div class="text-secondary-400 bg-surface-800 p-2 font-bold">
-							P2: <span class="text-surface-200">{$gameState.players[1] || 'Waiting...'}</span>
+						<div class="flex">
+							<div
+								class="text-secondary-400 bg-surface-900 border-surface-400 w-10 border-e-2 p-2 text-center font-bold"
+							>
+								<span>O</span>
+							</div>
+							<div class="text-primary-400 bg-surface-800 border-surface-400 w-full p-2 font-bold">
+								<span class="text-surface-200">{$gameState.players[1] || 'Waiting...'}</span>
+							</div>
 						</div>
 					</div>
 					<!-- Espectadores si existen -->
