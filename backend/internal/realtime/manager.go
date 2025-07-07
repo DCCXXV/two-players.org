@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/DCCXXV/twoplayers/backend/internal/config"
-	"github.com/DCCXXV/twoplayers/backend/internal/games" // Importar el nuevo paquete de juegos
+	"github.com/DCCXXV/twoplayers/backend/internal/games"
 	"github.com/DCCXXV/twoplayers/backend/internal/service"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -59,14 +59,15 @@ type GameInstance = games.Game
 
 // Room representa una sala de juego activa en memoria.
 type Room struct {
-	ID         uuid.UUID
-	GameType   string
-	HostName   string
-	Game       GameInstance
-	manager    *Manager
-	mu         sync.RWMutex
-	Clients    map[uuid.UUID]*Client
-	MaxPlayers int
+	ID              uuid.UUID
+	GameType        string
+	HostName        string
+	Game            GameInstance
+	manager         *Manager
+	mu              sync.RWMutex
+	Clients         map[uuid.UUID]*Client
+	MaxPlayers      int
+	rematchRequests map[uuid.UUID]bool // Rastrear solicitudes de revancha
 }
 
 // Métodos helper SIN locks para uso interno
@@ -332,13 +333,14 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 
 		// Crear la sala en memoria
 		room = &Room{
-			ID:         uuid.UUID(dbRoom.ID.Bytes),
-			GameType:   dbRoom.GameType,
-			Clients:    make(map[uuid.UUID]*Client),
-			HostName:   dbRoom.HostDisplayName,
-			Game:       game,
-			manager:    m,
-			MaxPlayers: m.getMaxPlayersForGame(dbRoom.GameType),
+			ID:              uuid.UUID(dbRoom.ID.Bytes),
+			GameType:        dbRoom.GameType,
+			Clients:         make(map[uuid.UUID]*Client),
+			HostName:        dbRoom.HostDisplayName,
+			Game:            game,
+			manager:         m,
+			MaxPlayers:      m.getMaxPlayersForGame(dbRoom.GameType),
+			rematchRequests: make(map[uuid.UUID]bool), // Inicializar mapa de revancha
 		}
 		m.rooms[room.ID] = room
 		log.Printf("Activated room %s in memory.", room.ID)
@@ -520,6 +522,7 @@ func (r *Room) broadcastRoomState() {
 		"maxPlayers":     r.MaxPlayers,
 		"canStart":       len(players) == r.MaxPlayers,
 		"game":           gameState,
+		"rematchCount":   len(r.rematchRequests),
 	}
 
 	log.Printf("🔄 broadcastRoomState: Room state created: %+v", roomState)
@@ -595,14 +598,52 @@ func (c *Client) readPump() {
 			} else {
 				c.sendError("Not in a room.")
 			}
+		case "rematch_request":
+			if c.currentRoom != nil {
+				c.currentRoom.handleRematch(c)
+			} else {
+				c.sendError("Not in a room.")
+			}
 		default:
 			c.sendError(fmt.Sprintf("Unknown message type '%s'.", msg.Type))
 		}
 	}
 }
 
+func (r *Room) handleRematch(client *Client) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if !r.Game.IsGameOver() {
+		client.sendError("The game is not over yet.")
+		return
+	}
+
+	r.rematchRequests[client.id] = true
+
+	players := r.getPlayersInternal()
+	if len(r.rematchRequests) == len(players) && len(players) == r.MaxPlayers {
+		r.Game.Reset()
+
+		var player0, player1 *Client
+		for _, p := range players {
+			if p.role == "player_0" {
+				player0 = p
+			} else if p.role == "player_1" {
+				player1 = p
+			}
+		}
+		if player0 != nil && player1 != nil {
+			player0.role, player1.role = player1.role, player0.role
+		}
+
+		r.rematchRequests = make(map[uuid.UUID]bool)
+	}
+
+	go r.broadcastRoomState()
+}
+
 func (c *Client) handleGameMove(payload json.RawMessage) {
-	// Determinar índice del jugador
 	var playerIndex int
 	switch c.role {
 	case "player_0":
@@ -614,20 +655,17 @@ func (c *Client) handleGameMove(payload json.RawMessage) {
 		return
 	}
 
-	// Parsear el movimiento (esto dependerá del tipo de juego)
 	var move any
 	if err := json.Unmarshal(payload, &move); err != nil {
 		c.sendError("Invalid move format.")
 		return
 	}
 
-	// Intentar hacer el movimiento
 	if err := c.currentRoom.Game.HandleMove(playerIndex, move); err != nil {
 		c.sendError(err.Error())
 		return
 	}
 
-	// Broadcast del nuevo estado
 	c.currentRoom.broadcastRoomState()
 }
 
@@ -682,5 +720,3 @@ func generateAliceOrBobName() string {
 	prefix := namePrefixes[rand.Intn(len(namePrefixes))]
 	return fmt.Sprintf("%s#%d", prefix, rand.Intn(9000)+1000)
 }
-
-

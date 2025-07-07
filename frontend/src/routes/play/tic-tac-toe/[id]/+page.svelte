@@ -9,12 +9,59 @@
 	} from '$lib/socketStore';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import RematchButton from '$lib/components/ui/buttons/RematchButton.svelte';
 	import Board from '$lib/components/tictactoe/Board.svelte';
 	import GameStatus from '$lib/components/tictactoe/GameStatus.svelte';
 
 	export let data;
 
 	let hasJoined = false;
+
+	let moveSoundX: HTMLAudioElement;
+	let moveSoundO: HTMLAudioElement;
+	let gameOverSound: HTMLAudioElement;
+
+	let prevTurn: number | undefined = undefined;
+	let gameHasEnded = false;
+
+	onMount(() => {
+		if (moveSoundX) {
+			moveSoundX.volume = 0.5;
+		}
+		if (moveSoundO) {
+			moveSoundO.volume = 0.5;
+		}
+		if (gameOverSound) {
+			gameOverSound.volume = 0.4;
+		}
+	});
+
+	$: if ($gameState && prevTurn === undefined) {
+		prevTurn = $gameState.game.currentTurn;
+	}
+
+	$: if ($gameState && prevTurn !== undefined && $gameState.game.currentTurn !== prevTurn) {
+		if (prevTurn === 0 && moveSoundX) {
+			moveSoundX.currentTime = 0;
+			moveSoundX.play().catch((e) => console.error('Error playing sound X', e));
+		} else if (prevTurn === 1 && moveSoundO) {
+			moveSoundO.currentTime = 0;
+			moveSoundO.play().catch((e) => console.error('Error playing sound O', e));
+		}
+		prevTurn = $gameState.game.currentTurn;
+	}
+
+	$: if ($gameState && $gameState.game.winner && !gameHasEnded) {
+		if (gameOverSound) {
+			gameOverSound.currentTime = 0;
+			gameOverSound.play().catch((e) => console.error('Error playing game over sound', e));
+			gameHasEnded = true;
+		}
+	}
+
+	$: if ($gameState && $gameState.game.winner === '' && gameHasEnded) {
+		gameHasEnded = false;
+	}
 
 	$: if ($roomClosedMessage) {
 		alert($roomClosedMessage); // Show an alert when the room is closed
@@ -42,6 +89,10 @@
 			}
 		});
 	}
+
+	function handleRematch() {
+		sendWebSocketMessage({ type: 'rematch_request' });
+	}
 </script>
 
 {#if data.error}
@@ -62,7 +113,7 @@
 		<div class="w-full lg:w-1/5">
 			<div>
 				{#if $gameState?.players?.length > 0}
-					<div class="border-surface-400 border-2">
+					<div class="border-surface-400 mb-4 border-2">
 						<div class="flex">
 							<div
 								class="text-primary-400 bg-surface-900 border-surface-400 w-10 border-e-2 border-b-2 p-2 text-center font-bold"
@@ -88,7 +139,7 @@
 					</div>
 					<!-- Espectadores si existen -->
 					{#if $gameState.spectatorCount > 0}
-						<details class="bg-surface-800 border-surface-400 mt-4 border-2 p-2">
+						<details class="bg-surface-800 border-surface-400 mb-4 border-2 p-2">
 							<summary class="text-surface-200 cursor-pointer font-bold">
 								Spectators ({$gameState.spectatorCount})
 							</summary>
@@ -100,14 +151,20 @@
 							</ul>
 						</details>
 					{/if}
-
-					<!-- Debug info temporal -->
+					{#if $gameState.game.winner != ''}
+						<RematchButton
+							rematchCount={$gameState.rematchCount}
+							maxPlayers={$gameState.maxPlayers}
+							onClick={handleRematch}
+						/>
+					{/if}
+					<!-- Debug info temporal
 					<details class="mt-4">
 						<summary class="text-surface-400 cursor-pointer text-sm">Debug Info</summary>
 						<pre class="bg-surface-900 mt-2 overflow-auto rounded p-2 text-xs">
-         			        {JSON.stringify($gameState, null, 2)}
+         					{JSON.stringify($gameState, null, 2)}
                         </pre>
-					</details>
+					</details>-->
 				{:else}
 					<p class="text-surface-400">No players yet...</p>
 				{/if}
@@ -124,3 +181,7 @@
 		<p class="text-surface-400 mb-4">Connecting to the room, please wait.</p>
 	</div>
 {/if}
+
+<audio src="/sounds/moveX.wav" bind:this={moveSoundX} preload="auto" />
+<audio src="/sounds/moveO.wav" bind:this={moveSoundO} preload="auto" />
+<audio src="/sounds/gameOver.wav" bind:this={gameOverSound} preload="auto" />

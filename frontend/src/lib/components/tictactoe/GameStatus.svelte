@@ -13,9 +13,9 @@
 			{#if gameState.game.winner === 'draw'}
 				It's a draw!
 			{:else if gameState.game.winner === 'X'}
-				{gameState.players[0]} wins!
+				{gameState.players[0]} wins as '<span class="text-primary-300 erasdust-400">X</span>'!
 			{:else if gameState.game.winner === 'O'}
-				{gameState.players[1]} wins!
+				{gameState.players[1]} wins as '<span class="text-secondary-300 erasdust-400">O</span>'!
 			{/if}
 		{:else}
 			{gameState.game.currentTurn === 0 ? `${gameState.players[0]}` : `${gameState.players[1]}`}'s
