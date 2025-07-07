@@ -179,6 +179,10 @@
 	<div class="text-center">
 		<h1 class="h3 lora-700 text-warning-400">Loading Room...</h1>
 		<p class="text-surface-400 mb-4">Connecting to the room, please wait.</p>
+		<p class="text-surface-500 text-sm">
+			If this is taking too long, you can
+			<a href="/play/tic-tac-toe" class="text-primary-400 hover:underline">return to lobby</a>.
+		</p>
 	</div>
 {/if}
 

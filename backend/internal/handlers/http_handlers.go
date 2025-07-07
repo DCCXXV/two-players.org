@@ -73,27 +73,15 @@ func (h *HTTPHandler) CreateRoom(c *gin.Context) {
 	createdRoom, err := h.roomService.CreateRoom(ctx, serviceParams)
 	if err != nil {
 		log.Printf("ERROR: Failed to create room via service: %v", err)
+		// Rollback connection
+		if delConnErr := h.connectionService.DeleteConnection(ctx, displayName); delConnErr != nil {
+			log.Printf("ERROR: Failed to rollback connection for %s: %v", displayName, delConnErr)
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create room"})
 		return
 	}
 
-	playerParams := service.CreatePlayerParams{
-		RoomID:            createdRoom.ID,
-		PlayerDisplayName: displayName,
-		PlayerOrder:       0,
-	}
-	_, err = h.playerService.CreatePlayer(ctx, playerParams)
-	if err != nil {
-		log.Printf("ERROR: Failed to create player 1 for room %s: %v", createdRoom.ID, err)
-		delErr := h.roomService.DeleteRoom(ctx, createdRoom.ID.Bytes)
-		if delErr != nil {
-			log.Printf("ERROR: Failed to delete room %s after player creation failed: %v", createdRoom.ID, delErr)
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create player for room"})
-		return
-	}
-
-	log.Printf("INFO: Room and player 1 created successfully: RoomID=%s, Player=%s", createdRoom.ID, displayName)
+	log.Printf("INFO: Room created successfully: RoomID=%s", createdRoom.ID)
 	c.JSON(http.StatusCreated, createdRoom)
 }
 

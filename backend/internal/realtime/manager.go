@@ -420,16 +420,17 @@ func (r *Room) addClient(client *Client) {
 	log.Printf("✅ addClient: Client %s joined room %s as %s (total players: %d)",
 		client.displayName, r.ID, client.role, r.getPlayerCountInternal())
 
+	// Send a success message to the client that just joined
 	client.sendMessage("join_success", map[string]any{
 		"roomId": r.ID.String(),
 		"role":   client.role,
 	})
 
-	r.mu.Unlock() // ← Liberar antes del broadcast
+	// Unlock before broadcasting to avoid deadlocks
+	r.mu.Unlock()
 
-	log.Printf("🔄 addClient: About to call broadcastRoomState")
+	// Broadcast the new state to everyone in the room
 	r.broadcastRoomState()
-	log.Printf("✅ addClient: Completed successfully")
 }
 
 func (r *Room) removeClient(client *Client) {
