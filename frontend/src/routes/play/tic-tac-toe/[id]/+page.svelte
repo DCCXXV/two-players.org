@@ -137,7 +137,6 @@
 							</div>
 						</div>
 					</div>
-					<!-- Espectadores si existen -->
 					{#if $gameState.spectatorCount > 0}
 						<details class="bg-surface-800 border-surface-400 mb-4 border-2 p-2">
 							<summary class="text-surface-200 cursor-pointer font-bold">
@@ -171,7 +170,15 @@
 			</div>
 		</div>
 		<div class="w-full lg:w-4/5">
-			<Board board={$gameState.game.board} disabled={!myTurn || $gameState.game.winner} {onMove} />
+			{#if $gameState.players.length == 2}
+				<Board
+					board={$gameState.game.board}
+					disabled={!myTurn || $gameState.game.winner}
+					{onMove}
+				/>
+			{:else}
+				<Board board={$gameState.game.board} disabled={true} {onMove} />
+			{/if}
 			<GameStatus gameState={$gameState} {myTurn}></GameStatus>
 		</div>
 	</div>
