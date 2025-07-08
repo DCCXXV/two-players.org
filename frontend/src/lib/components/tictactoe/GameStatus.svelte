@@ -5,7 +5,7 @@
 	}>();
 </script>
 
-<div class="text-surface-200 lora-700 text-center text-3xl">
+<div class="text-surface-300 lora-700 text-center text-3xl">
 	<h3>
 		{#if !gameState}
 			Cargando...

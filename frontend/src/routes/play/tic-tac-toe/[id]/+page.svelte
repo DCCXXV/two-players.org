@@ -179,7 +179,9 @@
 			{:else}
 				<Board board={$gameState.game.board} disabled={true} {onMove} />
 			{/if}
-			<GameStatus gameState={$gameState} {myTurn}></GameStatus>
+			<div class="mt-2">
+				<GameStatus gameState={$gameState} {myTurn}></GameStatus>
+			</div>
 		</div>
 	</div>
 {:else}

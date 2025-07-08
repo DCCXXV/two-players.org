@@ -38,11 +38,11 @@
 
 <div class="grid h-screen w-full grid-rows-[auto_1fr_auto]">
 	<header
-		class="border-surface-500 xl-landscape:px-16 flex min-h-14 flex-wrap justify-between gap-4 border-b-2 px-4 py-2 sm:justify-between sm:py-0"
+		class="border-surface-500 xl-landscape:px-16 relative flex min-h-14 flex-wrap justify-between gap-4 border-b-2 px-4 py-2 sm:justify-between sm:py-0"
 	>
 		<div class="flex w-full justify-between sm:w-auto">
 			<a
-				class="text-surface-500 lora-700 pt-2 font-bold hover:brightness-80 sm:text-lg md:text-2xl"
+				class="text-surface-500 lora-700 text-md pt-2 font-bold hover:brightness-80 md:text-2xl"
 				href="/"
 			>
 				<span class="text-primary-400">two</span><span class="text-surface-500">-</span><span
@@ -54,7 +54,7 @@
 					<input
 						type="text"
 						readonly
-						class="input text-primary-400 bg-surface-900 lora-400 mr-4 max-w-35 rounded-none text-center sm:text-sm md:text-lg"
+						class="input text-primary-400 bg-surface-900 lora-400 mr-4 max-w-35 rounded-none text-center text-sm md:text-lg"
 						value={$displayName}
 					/>
 				{:else if $isConnected}
@@ -66,11 +66,11 @@
 			</div>
 		</div>
 		<nav
-			class="text-surface-200 bg-surface-950 z-10 ms-4 me-auto w-full flex-col gap-2 sm:flex sm:w-auto sm:flex-row"
+			class="bg-surface-950 text-md text-surface-200 border-surface-500 absolute top-full left-0 z-10 w-full flex-col gap-2 border-2 opacity-90 sm:static sm:ms-4 sm:me-auto sm:flex sm:w-auto sm:flex-row sm:border-none sm:bg-transparent"
 			class:hidden={!menuOpen}
 		>
 			<section
-				class="bg-surface-950 flex h-full flex-col justify-center px-2"
+				class="bg-surface-950 flex h-full flex-col justify-center p-2"
 				class:border-b-3={page.url.pathname.startsWith('/play')}
 				class:border-primary-400={page.url.pathname.startsWith('/play')}
 			>
@@ -83,7 +83,7 @@
 				</a>
 			</section>
 			<section
-				class="bg-surface-950 flex h-full flex-col justify-center px-2"
+				class="bg-surface-950 flex h-full flex-col justify-center p-2"
 				class:border-b-3={page.url.pathname === '/explore'}
 				class:border-primary-400={page.url.pathname === '/explore'}
 			>
@@ -96,7 +96,7 @@
 				</a>
 			</section>
 			<section
-				class="bg-surface-950 flex h-full flex-col justify-center px-2"
+				class="bg-surface-950 flex h-full flex-col justify-center p-2"
 				class:border-b-3={page.url.pathname === '/learn'}
 				class:border-primary-400={page.url.pathname === '/learn'}
 			>

@@ -123,11 +123,11 @@
 	<p class="text-error-500">Error: {errorLoadingRooms}</p>
 	<button type="button" class="btn preset-outline-primary" onclick={loadRooms}>Try again</button>
 {:else if availableRooms.length > 0}
-	<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
+	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
 		{#each availableRooms as room (room.id)}
 			<a href={`/play/tic-tac-toe/${room.id}`} class="group">
 				<div
-					class="bg-surface-900 group-hover:bg-surface-800 flex aspect-square flex-col gap-2 p-4 shadow transition-colors"
+					class="bg-surface-900 group-hover:bg-surface-800 flex flex-col gap-2 p-4 shadow transition-colors sm:aspect-square"
 				>
 					<h4 class="text-primary-400 lora-700 text-lg text-pretty">{room.Name}</h4>
 					<div class="text-surface-300 space-y-1 text-sm">
