@@ -179,6 +179,7 @@ func NewManager(cfg *config.Config, cs service.ConnectionService, rs service.Roo
 	}
 
 	log.Println("Realtime Manager (WebSocket) initialized")
+	m.StartCleanupTask(5 * time.Minute) // Iniciar tarea de limpieza periódica
 	return m, nil
 }
 
@@ -242,13 +243,25 @@ func (m *Manager) registerClient(client *Client) {
 
 func (m *Manager) unregisterClient(client *Client) {
 	log.Printf("Realtime State: Attempting to unregister client %s (%s). Current room: %v", client.id, client.displayName, client.currentRoom != nil)
+
+	var roomToDelete *Room
 	if client.currentRoom != nil {
-		log.Printf("Realtime State: Client %s (%s) was in room %s. Calling removeClient.", client.displayName, client.id, client.currentRoom.ID)
-		client.currentRoom.removeClient(client)
+		room := client.currentRoom
+		// removeClient solo bloqueará la sala, no el manager, y nos dirá si hay que borrarla.
+		if room.removeClient(client) {
+			roomToDelete = room
+		}
 	}
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// Si se marcó una sala para borrar, la eliminamos del manager.
+	if roomToDelete != nil {
+		log.Printf("Manager: Deleting room %s because it's empty or the host left.", roomToDelete.ID)
+		delete(m.rooms, roomToDelete.ID)
+		log.Printf("Manager: Room %s deleted. Total rooms now: %d", roomToDelete.ID, len(m.rooms))
+	}
 
 	log.Printf("Realtime State: Before unregistering client %s, total clients: %d", client.id, len(m.clients))
 	if _, ok := m.clients[client.id]; ok {
@@ -273,6 +286,49 @@ func (m *Manager) cleanupConnectionDB(displayName string) {
 		log.Printf("ERROR: Realtime Cleanup: Failed to delete connection for %s from DB: %v", displayName, err)
 	} else {
 		log.Printf("Realtime Cleanup: Successfully deleted connection and associated data for %s from DB.", displayName)
+	}
+}
+
+// StartCleanupTask inicia una gorutina para limpiar periódicamente las salas vacías.
+func (m *Manager) StartCleanupTask(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	go func() {
+		for range ticker.C {
+			m.cleanupStaleRooms()
+		}
+	}()
+	log.Printf("Periodic cleanup task started. Interval: %s", interval)
+}
+
+// cleanupStaleRooms itera sobre las salas y elimina las que están vacías para evitar fugas de memoria.
+func (m *Manager) cleanupStaleRooms() {
+	log.Println("Realtime Cleanup: Running periodic task for stale rooms...")
+	var roomsToDelete []uuid.UUID
+
+	m.mu.RLock()
+	for roomID, room := range m.rooms {
+		room.mu.RLock()
+		clientCount := len(room.Clients)
+		room.mu.RUnlock()
+
+		if clientCount == 0 {
+			roomsToDelete = append(roomsToDelete, roomID)
+		}
+	}
+	m.mu.RUnlock()
+
+	if len(roomsToDelete) > 0 {
+		m.mu.Lock()
+		for _, roomID := range roomsToDelete {
+			if _, ok := m.rooms[roomID]; ok {
+				log.Printf("Realtime Cleanup: Removing empty/stale room %s", roomID)
+				delete(m.rooms, roomID)
+			}
+		}
+		m.mu.Unlock()
+		log.Printf("Realtime Cleanup: Finished removing %d stale rooms.", len(roomsToDelete))
+	} else {
+		log.Println("Realtime Cleanup: No stale rooms found to remove.")
 	}
 }
 
@@ -433,15 +489,17 @@ func (r *Room) addClient(client *Client) {
 	r.broadcastRoomState()
 }
 
-func (r *Room) removeClient(client *Client) {
+// removeClient saca a un cliente de la sala. Devuelve `true` si la sala queda vacía y debe ser eliminada.
+// Esta función está diseñada para ser llamada desde `manager.unregisterClient` para evitar deadlocks.
+func (r *Room) removeClient(client *Client) bool {
 	r.mu.Lock()
-	defer r.mu.Unlock() // Ensure unlock happens
+	defer r.mu.Unlock()
 
 	log.Printf("Room %s: removeClient called for client %s (%s). Host: %s. Current clients in room: %d", r.ID, client.displayName, client.id, r.HostName, len(r.Clients))
 
 	if _, ok := r.Clients[client.id]; !ok {
 		log.Printf("Room %s: Client %s not found in room. Aborting removeClient.", r.ID, client.displayName)
-		return // Client not in room
+		return false // La sala no debe ser eliminada
 	}
 
 	isHost := client.displayName == r.HostName
@@ -451,43 +509,29 @@ func (r *Room) removeClient(client *Client) {
 	client.currentRoom = nil
 	log.Printf("Room %s: Client %s removed. Remaining clients in room: %d", r.ID, client.displayName, len(r.Clients))
 
-	// If the host leaves, the room is closed for everyone.
+	// Si el anfitrión se va, la sala se cierra para todos.
 	if isHost {
 		log.Printf("Room %s: Host %s left. Closing room for all remaining clients.", r.ID, client.displayName)
 
-		// Notify remaining clients and clear their room association
+		// Notificar a los clientes restantes y limpiar su asociación con la sala
 		for _, otherClient := range r.Clients {
 			log.Printf("Room %s: Notifying client %s about room closure.", r.ID, otherClient.displayName)
 			otherClient.sendMessage("room_closed", map[string]string{"message": "The host has left the room."})
 			otherClient.currentRoom = nil
 		}
 
-		// Clear the clients map for this room
-		r.Clients = make(map[uuid.UUID]*Client) // This effectively empties the map
-
-		log.Printf("Room %s: All clients notified and room client map cleared. Remaining clients in room (after clear): %d", r.ID, len(r.Clients))
-
-		// Remove the room from the manager's list of active rooms
-		r.manager.mu.Lock()
-		log.Printf("Manager: Before deleting room %s, total rooms: %d", r.ID, len(r.manager.rooms))
-		delete(r.manager.rooms, r.ID)
-		log.Printf("Manager: Room %s deleted. Total rooms now: %d", r.ID, len(r.manager.rooms))
-		r.manager.mu.Unlock()
-		log.Printf("Room %s closed and removed from memory because host left.", r.ID)
+		r.Clients = make(map[uuid.UUID]*Client)
+		log.Printf("Room %s: All clients notified and room client map cleared. Signalling for deletion.", r.ID)
+		return true // Indicar que la sala debe ser eliminada
 
 	} else if len(r.Clients) == 0 {
-		log.Printf("Room %s: Last non-host client %s left. Room is now empty.", r.ID, client.displayName)
-		// If the last client (who wasn't the host) leaves, the room is also removed.
-		r.manager.mu.Lock()
-		log.Printf("Manager: Before deleting room %s, total rooms: %d", r.ID, len(r.manager.rooms))
-		delete(r.manager.rooms, r.ID)
-		log.Printf("Manager: Room %s deleted. Total rooms now: %d", r.ID, len(r.manager.rooms))
-		r.manager.mu.Unlock()
-		log.Printf("Room %s is now empty and has been removed from memory.", r.ID)
+		log.Printf("Room %s: Last non-host client %s left. Room is now empty. Signalling for deletion.", r.ID, client.displayName)
+		return true // Indicar que la sala debe ser eliminada
 	} else {
-		// A non-host client left, just update the state for everyone else.
+		// Un cliente que no es anfitrión se fue, solo actualiza el estado para los demás.
 		log.Printf("Room %s: Non-host client %s left. Broadcasting updated room state.", r.ID, client.displayName)
-		r.broadcastRoomState()
+		go r.broadcastRoomState() // Usar gorutina para evitar deadlock
+		return false              // La sala NO debe ser eliminada
 	}
 }
 
@@ -510,6 +554,7 @@ func (r *Room) broadcastRoomState() {
 	}
 
 	gameState := r.Game.GetGameState()
+	rematchCount := len(r.rematchRequests)
 	r.mu.RUnlock() // ← Liberar antes de crear el mapa
 
 	// Estado combinado
@@ -523,7 +568,7 @@ func (r *Room) broadcastRoomState() {
 		"maxPlayers":     r.MaxPlayers,
 		"canStart":       len(players) == r.MaxPlayers,
 		"game":           gameState,
-		"rematchCount":   len(r.rematchRequests),
+		"rematchCount":   rematchCount,
 	}
 
 	log.Printf("🔄 broadcastRoomState: Room state created: %+v", roomState)
@@ -630,21 +675,31 @@ func (c *Client) readPump() {
 
 func (r *Room) handleRematch(client *Client) {
 	r.mu.Lock()
-	defer r.mu.Unlock()
 
 	if !r.Game.IsGameOver() {
 		client.sendError("The game is not over yet.")
+		r.mu.Unlock()
 		return
 	}
 
 	r.rematchRequests[client.id] = true
 
 	players := r.getPlayersInternal()
-	if len(r.rematchRequests) == len(players) && len(players) == r.MaxPlayers {
+	rematchCount := len(r.rematchRequests)
+	allPlayersRequestedRematch := rematchCount == len(players) && len(players) == r.MaxPlayers
+
+	r.mu.Unlock()
+
+	// Broadcast state update after every rematch request
+	r.broadcastRoomState()
+
+	if allPlayersRequestedRematch {
+		r.mu.Lock()
 		r.Game.Reset()
 
+		// Swap roles for the new game
 		var player0, player1 *Client
-		for _, p := range players {
+		for _, p := range r.getPlayersInternal() {
 			if p.role == "player_0" {
 				player0 = p
 			} else if p.role == "player_1" {
@@ -656,9 +711,11 @@ func (r *Room) handleRematch(client *Client) {
 		}
 
 		r.rematchRequests = make(map[uuid.UUID]bool)
-	}
+		r.mu.Unlock()
 
-	go r.broadcastRoomState()
+		// Broadcast the new game state after reset
+		go r.broadcastRoomState()
+	}
 }
 
 func (c *Client) handleGameMove(payload json.RawMessage) {
@@ -737,7 +794,11 @@ func (c *Client) sendMessage(msgType string, payload any) {
 		log.Printf("ERROR: Failed to marshal message '%s' for client %s: %v", msgType, c.id, err)
 		return
 	}
-	c.send <- jsonData
+	select {
+	case c.send <- jsonData:
+	default:
+		log.Printf("⚠️  sendMessage: Client %s's send channel is full. Dropping message of type '%s'.", c.displayName, msgType)
+	}
 }
 
 func (c *Client) sendError(message string) {
