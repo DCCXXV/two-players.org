@@ -10,4 +10,10 @@
 - **Original Name:** Good!
 - **Author:** syseQ
 - **Source:** https://freesound.org/s/267528/
-- **License:** Creative Commons 0
+- **License:** Creative Commons 0 (CC0)
+
+- **File:** `click.wav`
+- **Original Name:** Wooden Hover
+- **Author:** BenjaminNelan
+- **Source:** https://freesound.org/s/321082/
+- **License:** Creative Commons 0 (CC0)

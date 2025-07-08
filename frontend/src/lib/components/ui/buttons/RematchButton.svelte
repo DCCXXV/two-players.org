@@ -4,12 +4,21 @@
 	export let onClick: () => void = () => {};
 
 	$: buttonText = `Rematch? ${rematchCount}/${maxPlayers}`;
+
+	function playClickSound() {
+		const audio = new Audio('/sounds/click.wav');
+		audio.volume = 0.5;
+		audio.play();
+	}
 </script>
 
 <button
 	id="rematch-button"
 	class="border-surface-400 bg-surface-900 text-surface-200 lora-700 w-full border-2 p-2 text-xl"
-	on:click={onClick}
+	on:click={() => {
+		onClick();
+		playClickSound();
+	}}
 >
 	{buttonText}
 	<div class="ribbon-left"></div>

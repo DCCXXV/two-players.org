@@ -186,6 +186,6 @@
 	</div>
 {/if}
 
-<audio src="/sounds/moveX.wav" bind:this={moveSoundX} preload="auto" />
-<audio src="/sounds/moveO.wav" bind:this={moveSoundO} preload="auto" />
-<audio src="/sounds/gameOver.wav" bind:this={gameOverSound} preload="auto" />
+<audio src="/sounds/moveX.wav" bind:this={moveSoundX} preload="auto"></audio>
+<audio src="/sounds/moveO.wav" bind:this={moveSoundO} preload="auto"></audio>
+<audio src="/sounds/gameOver.wav" bind:this={gameOverSound} preload="auto"></audio>
