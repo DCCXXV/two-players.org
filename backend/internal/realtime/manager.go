@@ -760,19 +760,9 @@ func (c *Client) writePump() {
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
-
-			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(<-c.send)
-			}
-
-			if err := w.Close(); err != nil {
+			// Send each message in its own frame to prevent JSON concatenation.
+			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				log.Printf("ERROR: Failed to write message for client %s: %v", c.id, err)
 				return
 			}
 		case <-ticker.C:
