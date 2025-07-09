@@ -3,7 +3,7 @@
 	<p>
 		If you have any questions, suggestions, or feedback, please feel free to reach out to us at: <a
 			href="mailto:your-email@example.com"
-			class="text-primary-400 hover:underline">contact@wip.com</a
+			class="text-primary-400 hover:underline">twoplayers@tutamail.com</a
 		>.
 	</p>
 

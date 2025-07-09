@@ -44,7 +44,7 @@
 
 	<h2 class="lora-700 h2 mt-8 mb-2">Contact Information</h2>
 	<p>
-		If you have any questions about these Terms of Service, please contact us at [Your Contact Email
-		Here].
+		If you have any questions about these Terms of Service, please contact us at
+		twoplayers@tutamail.com.
 	</p>
 </div>
