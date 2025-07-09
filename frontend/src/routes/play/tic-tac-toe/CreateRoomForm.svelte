@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { displayName } from '$lib/socketStore';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 
 	let {
-		onRoomCreate
+		onRoomCreate,
+		displayName
 	}: {
 		onRoomCreate: (options: { Name: string; GameType: string; IsPrivate: boolean }) => void;
+		displayName: string;
 	} = $props();
 
 	const playAsOptions = ['Random', 'X', 'O'];
@@ -15,8 +16,8 @@
 	let userHasEditedName = false;
 
 	$effect(() => {
-		if ($displayName && !userHasEditedName) {
-			roomNameValue = $displayName + "'s room";
+		if (displayName && !userHasEditedName) {
+			roomNameValue = displayName + "'s room";
 		}
 	});
 
@@ -36,7 +37,7 @@
 			IsPrivate: isPrivateRoom
 		});
 		userHasEditedName = false;
-		roomNameValue = $displayName ? $displayName + "'s room" : '';
+		roomNameValue = displayName ? displayName + "'s room" : '';
 		selectedPlayAs = playAsOptions[0];
 		isPrivateRoom = false;
 	}
@@ -77,6 +78,12 @@
 				</div>
 			</div>
 		</div>
-		<button type="submit" class="btn btn-lg preset-filled-primary-500 rounded-none">Create</button>
+		<button
+			type="submit"
+			class="btn btn-lg preset-filled-primary-500 rounded-none"
+			disabled={!displayName || !roomNameValue.trim()}
+		>
+			Create
+		</button>
 	</form>
 </div>

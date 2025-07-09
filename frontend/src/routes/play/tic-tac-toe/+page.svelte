@@ -12,7 +12,6 @@
 		OtherPlayer?: string | null;
 	}
 
-	let username = $displayName;
 	let availableRooms = $state<Room[]>([]);
 	let isLoadingRooms = $state(true);
 	let errorLoadingRooms = $state<string | null>(null);
@@ -68,7 +67,7 @@
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'X-Display-Name': username
+					'X-Display-Name': $displayName
 				},
 				body: JSON.stringify({
 					name: options.Name,
@@ -114,7 +113,13 @@
 	</li>
 </ol>
 <h3 class="h3 lora-700 text-surface-200 my-4">Create a room</h3>
-<CreateRoomForm onRoomCreate={handleRoomCreation} />
+{#if $displayName}
+	<CreateRoomForm onRoomCreate={handleRoomCreation} displayName={$displayName} />
+{:else}
+	<div class="border-surface-500 flex w-full items-center justify-center border-2 p-4 md:max-w-120">
+		<p class="text-surface-400">Initializing...</p>
+	</div>
+{/if}
 <h3 class="h3 lora-700 text-surface-200 my-4">Available rooms</h3>
 
 {#if isLoadingRooms}
