@@ -23,6 +23,7 @@ func generateGuestName() string {
 type ConnectionService interface {
 	CreateConnection(ctx context.Context, params CreateConnectionParams) (db.ActiveConnection, error)
 	DeleteConnection(ctx context.Context, displayName string) error
+	ListActiveConnections(ctx context.Context) ([]db.ListActiveConnectionsRow, error)
 }
 
 type CreateConnectionParams struct {
@@ -60,4 +61,8 @@ func (s *connectionService) CreateConnection(ctx context.Context, params CreateC
 
 func (s *connectionService) DeleteConnection(ctx context.Context, displayName string) error {
 	return s.queries.DeleteActiveConnection(ctx, displayName)
+}
+
+func (s *connectionService) ListActiveConnections(ctx context.Context) ([]db.ListActiveConnectionsRow, error) {
+	return s.queries.ListActiveConnections(ctx)
 }

@@ -180,3 +180,15 @@ func (h *HTTPHandler) ListPublicRooms(c *gin.Context) {
 
 	c.JSON(http.StatusOK, previews)
 }
+
+func (h *HTTPHandler) ListActiveConnections(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	connections, err := h.connectionService.ListActiveConnections(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve active connections"})
+		return
+	}
+
+	c.JSON(http.StatusOK, connections)
+}

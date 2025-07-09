@@ -34,6 +34,9 @@ type Querier interface {
 	GetPlayersByRoomID(ctx context.Context, roomID pgtype.UUID) ([]Player, error)
 	// Retrieve a specific room by its unique ID.
 	GetRoomByID(ctx context.Context, id pgtype.UUID) (Room, error)
+	// $1 would be a timestamp like NOW() - INTERVAL '5 minutes'
+	// Lists all active connections with their status and game type.
+	ListActiveConnections(ctx context.Context) ([]ListActiveConnectionsRow, error)
 	// Lists users currently in the lobby state.
 	ListActiveLobbyUsers(ctx context.Context) ([]string, error)
 	// Retrieve all rooms that are not private, ordered by creation time descending.

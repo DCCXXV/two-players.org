@@ -73,6 +73,7 @@ func main() {
 		apiV1.POST("/rooms", httpHandler.CreateRoom)
 		apiV1.GET("/rooms/:roomId", httpHandler.GetRoom)
 		apiV1.GET("/rooms", httpHandler.ListPublicRooms)
+		apiV1.GET("/connections", httpHandler.ListActiveConnections)
 		apiV1.DELETE("/rooms", httpHandler.DeleteRoom)
 	}
 

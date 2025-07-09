@@ -56,3 +56,17 @@ ORDER BY display_name;
 -- Finds connections that haven't been seen recently (for cleanup).
 SELECT display_name FROM active_connections
 WHERE last_seen < $1; -- $1 would be a timestamp like NOW() - INTERVAL '5 minutes'
+
+-- name: ListActiveConnections :many
+-- Lists all active connections with their status and game type.
+SELECT
+    ac.display_name,
+    ac.status,
+    r.game_type
+FROM
+    active_connections ac
+LEFT JOIN
+    rooms r ON ac.current_room_id = r.id
+ORDER BY
+    ac.last_seen DESC;
+

@@ -93,6 +93,48 @@ func (q *Queries) GetActiveConnection(ctx context.Context, displayName string) (
 	return i, err
 }
 
+const listActiveConnections = `-- name: ListActiveConnections :many
+
+SELECT
+    ac.display_name,
+    ac.status,
+    r.game_type
+FROM
+    active_connections ac
+LEFT JOIN
+    rooms r ON ac.current_room_id = r.id
+ORDER BY
+    ac.last_seen DESC
+`
+
+type ListActiveConnectionsRow struct {
+	DisplayName string      `json:"display_name"`
+	Status      string      `json:"status"`
+	GameType    pgtype.Text `json:"game_type"`
+}
+
+// $1 would be a timestamp like NOW() - INTERVAL '5 minutes'
+// Lists all active connections with their status and game type.
+func (q *Queries) ListActiveConnections(ctx context.Context) ([]ListActiveConnectionsRow, error) {
+	rows, err := q.db.Query(ctx, listActiveConnections)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListActiveConnectionsRow
+	for rows.Next() {
+		var i ListActiveConnectionsRow
+		if err := rows.Scan(&i.DisplayName, &i.Status, &i.GameType); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listActiveLobbyUsers = `-- name: ListActiveLobbyUsers :many
 SELECT display_name FROM active_connections
 WHERE status = 'lobby'
