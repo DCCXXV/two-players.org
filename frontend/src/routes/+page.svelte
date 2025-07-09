@@ -1,10 +1,10 @@
 <script lang="ts">
-	import ActiveConnectionsSidebar from '$lib/components/ActiveConnectionsSidebar.svelte';
+	import ActiveConnectionsSidebar from '$lib/components/ui/sideelements/ActiveConnectionsSidebar.svelte';
 	export let data;
 </script>
 
 <div class="flex flex-col gap-4 lg:flex-row">
-	<section class="mt-4 w-full lg:w-4/5">
+	<section class="w-full lg:w-4/5">
 		<h1 class="lora-700 text-surface-200 h3 mb-6">Current games</h1>
 		<section class="flex flex-wrap items-stretch gap-4">
 			<!-- Tic-Tac-Toe -->
