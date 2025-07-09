@@ -24,7 +24,7 @@ two-players.org is a web platform designed to facilitate real-time multiplayer g
 - **SvelteKit**: Framework for building the user interface.
 - **TypeScript**: For more robust and statically typed frontend development.
 - **Tailwind CSS**: For fast and responsive design.
-- **Socket.IO Client**: For managing WebSocket connections on the client side.
+- **WebSockets**: For real-time communication between the server and clients.
 
 ### Local Setup and Execution
 

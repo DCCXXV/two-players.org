@@ -1,16 +1,56 @@
 import { writable, type Writable } from 'svelte/store';
-interface WebSocketMessage {
-	type: string; // e.g: "connection_ready", "game_update", "error", "create_room", "join_room"
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	payload?: any;
+
+export interface TicTacToeGameState {
+	board: ('' | 'X' | 'O')[];
+	winner: string;
+	currentTurn: number;
 }
+
+export interface GameState {
+	game: TicTacToeGameState;
+	players: string[];
+	playerCount: number;
+	maxPlayers: number;
+	spectatorCount: number;
+	spectators: string[];
+	canStart: boolean;
+	rematchCount: number;
+}
+
+interface ConnectionReadyPayload {
+	displayName: string;
+}
+
+interface GameStateUpdatePayload extends GameState {}
+
+interface JoinSuccessPayload {
+	message?: string;
+}
+
+interface RoomClosedPayload {
+	message: string;
+}
+
+interface ErrorPayload {
+	message: string;
+}
+
+export type WebSocketMessage =
+	| { type: 'connection_ready'; payload: ConnectionReadyPayload }
+	| { type: 'game_state_update'; payload: GameStateUpdatePayload }
+	| { type: 'join_success'; payload?: JoinSuccessPayload }
+	| { type: 'room_closed'; payload: RoomClosedPayload }
+	| { type: 'error'; payload: ErrorPayload }
+	| { type: string; payload?: any }; // Fallback for unknown types
+
 const httpBackendUrl: string = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8080';
 const wsBackendUrl = httpBackendUrl.replace(/^http/, 'ws');
+
 // Stores
 export const socket: Writable<WebSocket | null> = writable(null);
 export const isConnected: Writable<boolean> = writable(false);
 export const displayName: Writable<string> = writable('');
-export const gameState: Writable<any> = writable(null);
+export const gameState: Writable<GameState | null> = writable(null);
 export const players: Writable<string[]> = writable([]);
 export const errorMessage: Writable<string | null> = writable(null);
 export const roomClosedMessage: Writable<string | null> = writable(null);

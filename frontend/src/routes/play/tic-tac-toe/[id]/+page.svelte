@@ -13,7 +13,9 @@
 	import Board from '$lib/components/tictactoe/Board.svelte';
 	import GameStatus from '$lib/components/tictactoe/GameStatus.svelte';
 
-	export let data;
+	import type { PageData } from './$types';
+
+export let data: PageData;
 
 	let hasJoined = false;
 
@@ -173,7 +175,7 @@
 			{#if $gameState.players.length == 2}
 				<Board
 					board={$gameState.game.board}
-					disabled={!myTurn || $gameState.game.winner}
+					disabled={!myTurn || !!$gameState.game.winner}
 					{onMove}
 				/>
 			{:else}

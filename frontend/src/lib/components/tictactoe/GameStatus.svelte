@@ -1,6 +1,8 @@
 <script lang="ts">
-	let { gameState, myTurn } = $props<{
-		gameState: any;
+	import type { GameState } from '$lib/socketStore';
+
+let { gameState, myTurn } = $props<{
+		gameState: GameState;
 		myTurn: boolean;
 	}>();
 </script>
