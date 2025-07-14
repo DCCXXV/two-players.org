@@ -2,6 +2,7 @@ package realtime
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -150,9 +151,10 @@ func (m *Manager) ServeWebSocket(w http.ResponseWriter, r *http.Request) error {
 
 func (m *Manager) registerClient(client *Client) {
 	m.mu.Lock()
-	defer m.mu.Unlock()
 	m.clients[client.id] = client
+	m.mu.Unlock()
 	log.Printf("Realtime State: Registered client %s (%s)", client.id, client.displayName)
+	m.broadcastConnections()
 }
 
 func (m *Manager) unregisterClient(client *Client) {
@@ -168,8 +170,6 @@ func (m *Manager) unregisterClient(client *Client) {
 	}
 
 	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	// If a room was marked for deletion, remove it from the manager.
 	if roomToDelete != nil {
 		log.Printf("Manager: Deleting room %s because it's empty or the host left.", roomToDelete.ID)
@@ -189,6 +189,8 @@ func (m *Manager) unregisterClient(client *Client) {
 	} else {
 		log.Printf("Realtime State: Client %s (%s) not found in manager's clients map.", client.id, client.displayName)
 	}
+	m.mu.Unlock()
+	m.broadcastConnections()
 }
 
 func (m *Manager) cleanupConnectionDB(displayName string) {
@@ -259,4 +261,33 @@ func generateAliceOrBobName() string {
 	namePrefixes := []string{"Alice", "Bob"}
 	prefix := namePrefixes[rand.Intn(len(namePrefixes))]
 	return fmt.Sprintf("%s#%d", prefix, rand.Intn(9000)+1000)
+}
+
+func (m *Manager) broadcastConnections() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	connections, err := m.connectionService.ListActiveConnections(ctx)
+	if err != nil {
+		log.Printf("ERROR: Failed to list active connections for broadcast: %v", err)
+		return
+	}
+
+	message := map[string]interface{}{
+		"type":    "connections_update",
+		"payload": connections,
+	}
+
+	msgBytes, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("ERROR: Failed to marshal connections update: %v", err)
+		return
+	}
+
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, client := range m.clients {
+		client.send <- msgBytes
+	}
 }

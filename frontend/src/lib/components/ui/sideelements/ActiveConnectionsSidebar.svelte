@@ -6,7 +6,7 @@
 	<summary
 		class="text-surface-200 lora-700 hover:bg-surface-950 cursor-pointer p-2 text-lg font-bold"
 	>
-		Active Players: {connections.length}
+		Active Players: {connections?.length ?? 0}
 	</summary>
 
 	{#if connections && connections.length > 0}
@@ -26,7 +26,7 @@
 			{/each}
 		</ul>
 	{:else}
-		<p class="text-surface-400 mt-2">No active players found.</p>
+		<p class="text-surface-400 p-2">No active players found.</p>
 	{/if}
 </details>
 

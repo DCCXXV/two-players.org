@@ -1,6 +1,37 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import {
+		connectWebSocket,
+		displayName,
+		isConnected,
+		socket as socketStore
+	} from '$lib/socketStore';
 	import ActiveConnectionsSidebar from '$lib/components/ui/sideelements/ActiveConnectionsSidebar.svelte';
+
 	export let data;
+
+	let connections = data.connections || [];
+
+	onMount(() => {
+		if (!$socketStore) {
+			connectWebSocket();
+		}
+
+		const unsubscribe = socketStore.subscribe((socket) => {
+			if (socket) {
+				socket.addEventListener('message', (event) => {
+					const message = JSON.parse(event.data);
+					if (message.type === 'connections_update') {
+						connections = message.payload;
+					}
+				});
+			}
+		});
+
+		return () => {
+			unsubscribe();
+		};
+	});
 </script>
 
 <div class="flex flex-col gap-4 lg:flex-row">
@@ -100,5 +131,11 @@
 		</section>
 	</section>
 
-	<ActiveConnectionsSidebar connections={data.connections} />
+	{#if $isConnected}
+		<ActiveConnectionsSidebar {connections} />
+	{:else}
+		<div class="w-full lg:w-1/5">
+			<p class="text-surface-400 p-2">Connecting...</p>
+		</div>
+	{/if}
 </div>
