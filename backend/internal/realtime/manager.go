@@ -66,7 +66,35 @@ func NewManager(cfg *config.Config, cs service.ConnectionService, rs service.Roo
 
 	log.Println("Realtime Manager (WebSocket) initialized")
 	m.StartCleanupTask(5 * time.Minute) // Start periodic cleanup task
+	m.CleanupStaleConnections()
 	return m, nil
+}
+
+func (m *Manager) CleanupStaleConnections() {
+	log.Println("Cleaning up stale connections from the database...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	connections, err := m.connectionService.ListActiveConnections(ctx)
+	if err != nil {
+		log.Printf("ERROR: Failed to list active connections for cleanup: %v", err)
+		return
+	}
+
+	if len(connections) == 0 {
+		log.Println("No stale connections to clean up.")
+		return
+	}
+
+	for _, conn := range connections {
+		err := m.connectionService.DeleteConnection(ctx, conn.DisplayName)
+		if err != nil {
+			log.Printf("ERROR: Failed to delete stale connection for %s: %v", conn.DisplayName, err)
+		} else {
+			log.Printf("Successfully cleaned up stale connection for %s.", conn.DisplayName)
+		}
+	}
+	log.Printf("Finished cleaning up %d stale connections.", len(connections))
 }
 
 // ServeWebSocket is the entry point for a new connection.
