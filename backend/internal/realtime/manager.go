@@ -264,6 +264,14 @@ func generateAliceOrBobName() string {
 }
 
 func (m *Manager) broadcastConnections() {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	clientsByDisplayName := make(map[string]*Client)
+	for _, client := range m.clients {
+		clientsByDisplayName[client.displayName] = client
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -273,9 +281,29 @@ func (m *Manager) broadcastConnections() {
 		return
 	}
 
+	payload := make([]map[string]interface{}, len(connections))
+
+	for i, conn := range connections {
+		status := "idle"
+		var gameType *string
+
+		if client, ok := clientsByDisplayName[conn.DisplayName]; ok {
+			if client.currentRoom != nil {
+				status = "in-game"
+				gameType = &client.currentRoom.GameType
+			}
+		}
+
+		payload[i] = map[string]interface{}{
+			"display_name": conn.DisplayName,
+			"status":       status,
+			"game_type":    gameType,
+		}
+	}
+
 	message := map[string]interface{}{
 		"type":    "connections_update",
-		"payload": connections,
+		"payload": payload,
 	}
 
 	msgBytes, err := json.Marshal(message)
@@ -283,9 +311,6 @@ func (m *Manager) broadcastConnections() {
 		log.Printf("ERROR: Failed to marshal connections update: %v", err)
 		return
 	}
-
-	m.mu.RLock()
-	defer m.mu.RUnlock()
 
 	for _, client := range m.clients {
 		client.send <- msgBytes
