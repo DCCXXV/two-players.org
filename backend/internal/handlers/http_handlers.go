@@ -136,6 +136,12 @@ func (h *HTTPHandler) DeleteRoom(c *gin.Context) {
 func (h *HTTPHandler) ListPublicRooms(c *gin.Context) {
 	ctx := c.Request.Context()
 
+	gameType := c.Query("game_type")
+	if gameType == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "game_type query parameter is required"})
+		return
+	}
+
 	limit := int32(20)
 	offset := int32(0)
 	if l := c.Query("limit"); l != "" {
@@ -145,7 +151,7 @@ func (h *HTTPHandler) ListPublicRooms(c *gin.Context) {
 		fmt.Sscanf(o, "%d", &offset)
 	}
 
-	rooms, err := h.roomService.ListPublicRoomsWithPlayers(ctx, limit, offset)
+	rooms, err := h.roomService.ListPublicRoomsWithPlayers(ctx, gameType, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve rooms"})
 		return

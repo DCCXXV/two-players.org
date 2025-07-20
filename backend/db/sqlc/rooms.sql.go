@@ -134,14 +134,15 @@ SELECT
 FROM rooms r
 LEFT JOIN players p1 ON p1.room_id = r.id AND p1.player_order = 0
 LEFT JOIN players p2 ON p2.room_id = r.id AND p2.player_order = 1
-WHERE r.is_private = FALSE
+WHERE r.is_private = FALSE AND r.game_type = $1
 ORDER BY r.created_at DESC
-LIMIT $1 OFFSET $2
+LIMIT $2 OFFSET $3
 `
 
 type ListPublicRoomsWithPlayersParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	GameType string `json:"game_type"`
+	Limit    int32  `json:"limit"`
+	Offset   int32  `json:"offset"`
 }
 
 type ListPublicRoomsWithPlayersRow struct {
@@ -154,7 +155,7 @@ type ListPublicRoomsWithPlayersRow struct {
 
 // Retrieve all rooms that are not private with player info, ordered by creation time descending.
 func (q *Queries) ListPublicRoomsWithPlayers(ctx context.Context, arg ListPublicRoomsWithPlayersParams) ([]ListPublicRoomsWithPlayersRow, error) {
-	rows, err := q.db.Query(ctx, listPublicRoomsWithPlayers, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listPublicRoomsWithPlayers, arg.GameType, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

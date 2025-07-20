@@ -4,16 +4,14 @@ import (
 	"testing"
 )
 
-// Helper function to create a move payload.
-func makeMovePayload(cellIndex int) any {
+func makeTicTacToeMovePayload(cellIndex int) any {
 	return map[string]any{"cellIndex": float64(cellIndex)}
 }
 
-// Test a simple valid move.
-func TestHandleMove_ValidMove(t *testing.T) {
+func TestTicTacToe_HandleMove_ValidMove(t *testing.T) {
 	game, _ := NewTicTacToe()
 
-	err := game.HandleMove(0, makeMovePayload(0))
+	err := game.HandleMove(0, makeTicTacToeMovePayload(0))
 	if err != nil {
 		t.Fatalf("Expected no error for a valid move, but got %v", err)
 	}
@@ -27,13 +25,12 @@ func TestHandleMove_ValidMove(t *testing.T) {
 	}
 }
 
-// Test trying to move on an already occupied cell.
-func TestHandleMove_OccupiedCell(t *testing.T) {
+func TestTicTacToe_HandleMove_OccupiedCell(t *testing.T) {
 	game, _ := NewTicTacToe()
-	game.HandleMove(0, makeMovePayload(0)) // Player 0 moves to 0
 
-	// Player 1 tries to move to the same cell
-	err := game.HandleMove(1, makeMovePayload(0))
+	game.HandleMove(0, makeTicTacToeMovePayload(0)) // Player 0 moves to 0
+	err := game.HandleMove(1, makeTicTacToeMovePayload(0))
+
 	if err == nil {
 		t.Fatal("Expected an error when moving to an occupied cell, but got nil")
 	}
@@ -44,13 +41,12 @@ func TestHandleMove_OccupiedCell(t *testing.T) {
 	}
 }
 
-// Test a player trying to move when it's not their turn.
-func TestHandleMove_NotYourTurn(t *testing.T) {
+func TestTicTacToe_HandleMove_NotYourTurn(t *testing.T) {
 	game, _ := NewTicTacToe()
-	game.HandleMove(0, makeMovePayload(0)) // Player 0 moves
 
-	// Player 0 tries to move again
-	err := game.HandleMove(0, makeMovePayload(1))
+	game.HandleMove(0, makeTicTacToeMovePayload(0)) // Player 0 moves
+	err := game.HandleMove(0, makeTicTacToeMovePayload(1))
+
 	if err == nil {
 		t.Fatal("Expected an error when moving out of turn, but got nil")
 	}
@@ -61,8 +57,7 @@ func TestHandleMove_NotYourTurn(t *testing.T) {
 	}
 }
 
-// Test a full game sequence that results in a win.
-func TestHandleMove_WinCondition(t *testing.T) {
+func TestTicTacToe_WinCondition(t *testing.T) {
 	game, _ := NewTicTacToe()
 	moves := []struct {
 		playerIndex int
@@ -76,7 +71,7 @@ func TestHandleMove_WinCondition(t *testing.T) {
 	}
 
 	for _, move := range moves {
-		err := game.HandleMove(move.playerIndex, makeMovePayload(move.cellIndex))
+		err := game.HandleMove(move.playerIndex, makeTicTacToeMovePayload(move.cellIndex))
 		if err != nil {
 			t.Fatalf("Move sequence failed at player %d, cell %d: %v", move.playerIndex, move.cellIndex, err)
 		}
@@ -91,8 +86,7 @@ func TestHandleMove_WinCondition(t *testing.T) {
 	}
 }
 
-// Test a full game sequence that results in a draw.
-func TestHandleMove_DrawCondition(t *testing.T) {
+func TestTicTacToe_DrawCondition(t *testing.T) {
 	game, _ := NewTicTacToe()
 	moves := []struct {
 		playerIndex int
@@ -104,7 +98,7 @@ func TestHandleMove_DrawCondition(t *testing.T) {
 	}
 
 	for _, move := range moves {
-		game.HandleMove(move.playerIndex, makeMovePayload(move.cellIndex))
+		game.HandleMove(move.playerIndex, makeTicTacToeMovePayload(move.cellIndex))
 	}
 
 	if !game.IsGameOver() {
@@ -116,12 +110,10 @@ func TestHandleMove_DrawCondition(t *testing.T) {
 	}
 }
 
-// Test the Reset function.
-func TestReset(t *testing.T) {
+func TestTicTacToe_Reset(t *testing.T) {
 	game, _ := NewTicTacToe()
-	// Make some moves
-	game.HandleMove(0, makeMovePayload(0))
-	game.HandleMove(1, makeMovePayload(1))
+	game.HandleMove(0, makeTicTacToeMovePayload(0))
+	game.HandleMove(1, makeTicTacToeMovePayload(1))
 
 	game.Reset()
 
@@ -137,7 +129,6 @@ func TestReset(t *testing.T) {
 		t.Errorf("Expected current turn to be 0 after reset, but got %d", state.CurrentTurn)
 	}
 
-	// Check if board is empty
 	for i, cell := range state.Board {
 		if cell != "" {
 			t.Errorf("Expected board cell %d to be empty after reset, but got '%s'", i, cell)

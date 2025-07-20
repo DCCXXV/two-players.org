@@ -72,8 +72,8 @@
 			<!-- Domineering -->
 			<div class="group relative max-w-xs">
 				<a
-					href="#"
-					class="card preset-filled-surface-100-900 border-secondary-200-800 card-hover divide-surface-200-800 z-10 flex h-full max-w-xs flex-col divide-y overflow-hidden rounded-none border-[1px]"
+					href="/play/domineering"
+					class="card preset-filled-surface-100-900 border-warning-200-800 card-hover divide-surface-200-800 z-10 flex h-full max-w-xs flex-col divide-y overflow-hidden rounded-none border-[1px]"
 				>
 					<article class="flex-1 space-y-4 p-4">
 						<div>
@@ -92,10 +92,10 @@
 					</footer>
 				</a>
 				<span
-					class="bg-secondary-400 pointer-events-none absolute top-full left-0 z-0 -mt-2 w-full translate-y-0 px-2 py-1 text-center text-xs whitespace-nowrap text-white opacity-0 transition-all duration-300 group-hover:translate-y-2 group-hover:opacity-100"
+					class="bg-warning-400 pointer-events-none absolute top-full left-0 z-0 -mt-2 w-full translate-y-0 px-2 py-1 text-center text-xs whitespace-nowrap text-black opacity-0 transition-all duration-300 group-hover:translate-y-2 group-hover:opacity-100"
 					role="tooltip"
 				>
-					PENDING
+					WIP
 				</span>
 			</div>
 

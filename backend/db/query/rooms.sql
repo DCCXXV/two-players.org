@@ -47,6 +47,6 @@ SELECT
 FROM rooms r
 LEFT JOIN players p1 ON p1.room_id = r.id AND p1.player_order = 0
 LEFT JOIN players p2 ON p2.room_id = r.id AND p2.player_order = 1
-WHERE r.is_private = FALSE
+WHERE r.is_private = FALSE AND r.game_type = $1
 ORDER BY r.created_at DESC
-LIMIT $1 OFFSET $2;
+LIMIT $2 OFFSET $3;

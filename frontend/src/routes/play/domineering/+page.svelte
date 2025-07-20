@@ -25,7 +25,7 @@
 		try {
 			console.log('Trying to fetch /api/v1/rooms...');
 			const response = await fetch(
-				import.meta.env.VITE_SOCKET_URL + '/api/v1/rooms?game_type=tic-tac-toe'
+				import.meta.env.VITE_SOCKET_URL + '/api/v1/rooms?game_type=domineering'
 			);
 			console.log('Response received:', {
 				ok: response.ok,
@@ -73,7 +73,7 @@
 				},
 				body: JSON.stringify({
 					name: options.Name,
-					game_type: 'tic-tac-toe',
+					game_type: 'domineering',
 					is_private: options.IsPrivate
 				})
 			});
@@ -90,8 +90,8 @@
 
 			const newRoom = await response.json();
 			console.log('Room created successfully:', newRoom);
-			console.log('Navigating to:', `/play/tic-tac-toe/${newRoom.id}`);
-			goto(`/play/tic-tac-toe/${newRoom.id}`);
+			console.log('Navigating to:', `/play/domineering/${newRoom.id}`);
+			goto(`/play/domineering/${newRoom.id}`);
 		} catch (error) {
 			console.error('Error creating room:', error);
 			alert(`Error creating room: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -111,7 +111,7 @@
 	<li><a class="opacity-60 hover:underline" href="/play">Play</a></li>
 	<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
 	<li>
-		<a class="text-primary-400 hover:underline" href="/play/tic-tac-toe">Tic-Tac-Toe</a>
+		<a class="text-primary-400 hover:underline" href="/play/domineering">Domineering</a>
 	</li>
 </ol>
 <h3 class="h3 lora-700 text-surface-200 my-4">Create a room</h3>
@@ -132,7 +132,7 @@
 {:else if availableRooms.length > 0}
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
 		{#each availableRooms as room (room.id)}
-			<a href={`/play/tic-tac-toe/${room.id}`} class="group">
+			<a href={`/play/domineering/${room.id}`} class="group">
 				<div
 					class="bg-surface-900 group-hover:bg-surface-800 flex flex-col gap-2 p-4 shadow transition-colors sm:aspect-square"
 				>

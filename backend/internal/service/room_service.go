@@ -34,7 +34,7 @@ type RoomService interface {
 	GetRoomByID(ctx context.Context, roomID uuid.UUID) (db.Room, error)
 	DeleteRoom(ctx context.Context, roomID uuid.UUID) error
 	ListPublicRooms(ctx context.Context) ([]db.Room, error)
-	ListPublicRoomsWithPlayers(ctx context.Context, limit, offset int32) ([]db.ListPublicRoomsWithPlayersRow, error)
+	ListPublicRoomsWithPlayers(ctx context.Context, gameType string, limit, offset int32) ([]db.ListPublicRoomsWithPlayersRow, error)
 	JoinRoom(ctx context.Context, input JoinRoomInput) (*JoinRoomResult, error)
 }
 
@@ -87,10 +87,11 @@ func (s *roomService) ListPublicRooms(ctx context.Context) ([]db.Room, error) {
 	return s.queries.ListPublicRooms(ctx)
 }
 
-func (s *roomService) ListPublicRoomsWithPlayers(ctx context.Context, limit, offset int32) ([]db.ListPublicRoomsWithPlayersRow, error) {
+func (s *roomService) ListPublicRoomsWithPlayers(ctx context.Context, gameType string, limit, offset int32) ([]db.ListPublicRoomsWithPlayersRow, error) {
 	return s.queries.ListPublicRoomsWithPlayers(ctx, db.ListPublicRoomsWithPlayersParams{
-		Limit:  limit,
-		Offset: offset,
+		GameType: gameType,
+		Limit:    limit,
+		Offset:   offset,
 	})
 }
 

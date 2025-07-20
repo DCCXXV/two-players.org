@@ -23,12 +23,10 @@ type Room struct {
 	mu              sync.RWMutex
 	Clients         map[uuid.UUID]*Client
 	MaxPlayers      int
-	rematchRequests map[uuid.UUID]bool // Track rematch requests
+	rematchRequests map[uuid.UUID]bool
 }
 
-// Helper methods WITHOUT locks for internal use
 func (r *Room) getPlayersInternal() []*Client {
-	// DO NOT use locks here - caller is assumed to hold the lock
 	var player0, player1 *Client
 	for _, client := range r.Clients {
 		if client.role == "player_0" {
@@ -49,7 +47,6 @@ func (r *Room) getPlayersInternal() []*Client {
 }
 
 func (r *Room) getSpectatorsInternal() []*Client {
-	// DO NOT use locks here - caller is assumed to hold the lock
 	var spectators []*Client
 	for _, client := range r.Clients {
 		if client.role == "spectator" {
@@ -67,7 +64,6 @@ func (r *Room) getSpectatorCountInternal() int {
 	return len(r.getSpectatorsInternal())
 }
 
-// Public methods WITH locks (keep for external use)
 func (r *Room) GetPlayers() []*Client {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -103,7 +99,6 @@ func (r *Room) addClient(client *Client) {
 		return
 	}
 
-	// Determine role based on arrival order - USE INTERNAL METHODS
 	playerCount := r.getPlayerCountInternal()
 	log.Printf("🔄 addClient: Current player count: %d", playerCount)
 
@@ -156,16 +151,13 @@ func (r *Room) addClient(client *Client) {
 	log.Printf("✅ addClient: Client %s joined room %s as %s (total players: %d)",
 		client.displayName, r.ID, client.role, r.getPlayerCountInternal())
 
-	// Send a success message to the client that just joined
 	client.sendMessage("join_success", map[string]any{
 		"roomId": r.ID.String(),
 		"role":   client.role,
 	})
 
-	// Unlock before broadcasting to avoid deadlocks
 	r.mu.Unlock()
 
-	// Broadcast the new state to everyone in the room
 	r.broadcastRoomState()
 }
 
@@ -237,7 +229,6 @@ func (r *Room) broadcastRoomState() {
 	rematchCount := len(r.rematchRequests)
 	r.mu.RUnlock()
 
-	// Combined state
 	roomState := map[string]any{
 		"roomId":         r.ID.String(),
 		"gameType":       r.GameType,
