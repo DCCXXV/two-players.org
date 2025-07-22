@@ -7,6 +7,12 @@
 		game rooms. These display names are temporary and are deleted upon disconnection from our
 		service.
 	</p>
+	<p>
+		To improve your experience and reduce unnecessary network requests, we also temporarily store
+		information about game rooms you create in your browser's session storage. This data includes
+		the room ID, name, and the creator's display name. This information is automatically deleted
+		when you close the browser tab.
+	</p>
 
 	<h2 class="lora-700 h2 mt-8 mb-2">How We Use Your Data</h2>
 	<p>

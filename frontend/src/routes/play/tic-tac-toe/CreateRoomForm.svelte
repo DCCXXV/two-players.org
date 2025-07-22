@@ -31,11 +31,12 @@
 			alert('Room name cannot be empty!');
 			return;
 		}
-		onRoomCreate({
+		const roomDetails = {
 			Name: roomNameValue,
 			GameType: 'tic-tac-toe',
 			IsPrivate: isPrivateRoom
-		});
+		};
+		onRoomCreate(roomDetails);
 		userHasEditedName = false;
 		roomNameValue = displayName ? displayName + "'s room" : '';
 		selectedPlayAs = playAsOptions[0];

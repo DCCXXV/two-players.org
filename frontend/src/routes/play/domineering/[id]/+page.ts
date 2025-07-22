@@ -3,6 +3,13 @@ import type { PageLoad } from './$types';
 export const load: PageLoad = async ({ params, fetch }) => {
 	try {
 		const roomId = params.id;
+		const storedRoom = sessionStorage.getItem(`room_${roomId}`);
+
+		if (storedRoom) {
+			console.log('Room data found in sessionStorage');
+			return { room: JSON.parse(storedRoom), error: null };
+		}
+
 		const res = await fetch(import.meta.env.VITE_SOCKET_URL + `/api/v1/rooms/${roomId}`);
 
 		if (!res.ok) {

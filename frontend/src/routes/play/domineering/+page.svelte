@@ -90,6 +90,7 @@
 
 			const newRoom = await response.json();
 			console.log('Room created successfully:', newRoom);
+			sessionStorage.setItem(`room_${newRoom.id}`, JSON.stringify(newRoom));
 			console.log('Navigating to:', `/play/domineering/${newRoom.id}`);
 			goto(`/play/domineering/${newRoom.id}`);
 		} catch (error) {
@@ -159,7 +160,7 @@
 	<p class="text-surface-400">No public rooms available. Create one!</p>
 {/if}
 {#if isCreatingRoom}
-	<div class="fixed inset-0 flex items-center justify-center bg-black/50 opacity-80">
+	<div class="fixed inset-0 z-10 flex items-center justify-center bg-black/50 opacity-80">
 		<p class="lora-700 text-xl">Creating room...</p>
 	</div>
 {/if}

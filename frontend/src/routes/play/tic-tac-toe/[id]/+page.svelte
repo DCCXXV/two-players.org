@@ -104,15 +104,17 @@
 		<a href="/play/tic-tac-toe" class="btn bg-primary-400">Go to Lobby</a>
 	</div>
 {:else if $gameState}
-	<h1 class="h3 lora-700 text-primary-400">{data.room.name}</h1>
+	<h1 class="h3 lora-700 text-primary-400 mb-4">{data.room.name}</h1>
+	<!--
 	<p class="text-surface-500 mb-4">
 		ID: {data.room.id} · Status: {$gameState.canStart
 			? 'Ready to start!'
 			: 'Waiting for players...'}
 		({$gameState.playerCount}/{$gameState.maxPlayers} players)
 	</p>
-	<div class="flex flex-col justify-between gap-4 lg:flex-row">
-		<div class="w-full lg:w-1/5">
+	-->
+	<div class="flex flex-col justify-between gap-4 md:flex-row">
+		<div class="w-full md:w-1/5">
 			<div>
 				{#if $gameState?.players?.length > 0}
 					<div class="border-surface-400 mb-4 border-2">
@@ -171,7 +173,7 @@
 				{/if}
 			</div>
 		</div>
-		<div class="w-full lg:w-4/5">
+		<div class="w-full md:w-4/5">
 			{#if $gameState.players.length == 2}
 				<Board
 					board={$gameState.game.board}

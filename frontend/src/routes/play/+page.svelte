@@ -2,7 +2,7 @@
 	// Temp
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	const targetUrl = '/play/tic-tac-toe';
+	const targetUrl = '/';
 
 	onMount(() => {
 		goto(targetUrl, { replaceState: true });
