@@ -35,12 +35,21 @@ interface ErrorPayload {
 	message: string;
 }
 
+export interface ChatMessage {
+	displayName: string;
+	message: string;
+	timestamp: string;
+}
+
+interface ChatMessagePayload extends ChatMessage {}
+
 export type WebSocketMessage =
 	| { type: 'connection_ready'; payload: ConnectionReadyPayload }
 	| { type: 'game_state_update'; payload: GameStateUpdatePayload }
 	| { type: 'join_success'; payload?: JoinSuccessPayload }
 	| { type: 'room_closed'; payload: RoomClosedPayload }
 	| { type: 'error'; payload: ErrorPayload }
+	| { type: 'chat_message'; payload: ChatMessagePayload }
 	| { type: string; payload?: any }; // Fallback for unknown types
 
 const httpBackendUrl: string = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8080';
@@ -54,6 +63,7 @@ export const gameState: Writable<GameState | null> = writable(null);
 export const players: Writable<string[]> = writable([]);
 export const errorMessage: Writable<string | null> = writable(null);
 export const roomClosedMessage: Writable<string | null> = writable(null);
+export const chatMessages: Writable<ChatMessage[]> = writable([]);
 
 let socketInstance: WebSocket | null = null;
 let reconnectAttempts = 0;
@@ -147,6 +157,11 @@ export function connectWebSocket(): void {
 				case 'error':
 					console.log('❌ Error received:', message.payload);
 					errorMessage.set(message.payload.message);
+					break;
+
+				case 'chat_message':
+					console.log('💬 Chat message received:', message.payload);
+					chatMessages.update((messages) => [...messages, message.payload]);
 					break;
 
 				default:

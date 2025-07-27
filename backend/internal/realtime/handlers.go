@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/DCCXXV/twoplayers/backend/internal/games"
 	"github.com/google/uuid"
@@ -146,4 +147,26 @@ func (r *Room) handleRematch(client *Client) {
 		// Broadcast the new game state after reset
 		go r.broadcastRoomState()
 	}
+}
+
+func (r *Room) handleChatMessage(client *Client, payload json.RawMessage) {
+	var req struct {
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(payload, &req); err != nil {
+		client.sendError("Invalid chat message payload.")
+		return
+	}
+
+	if req.Message == "" {
+		return
+	}
+
+	chatMessage := map[string]any{
+		"displayName": client.displayName,
+		"message":     req.Message,
+		"timestamp":   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	r.broadcastMessage("chat_message", chatMessage)
 }

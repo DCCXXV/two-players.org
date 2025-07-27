@@ -65,6 +65,12 @@ func (c *Client) readPump() {
 			} else {
 				c.sendError("Not in a room.")
 			}
+		case "chat_message":
+			if c.currentRoom != nil {
+				c.currentRoom.handleChatMessage(c, msg.Payload)
+			} else {
+				c.sendError("Not in a room.")
+			}
 		default:
 			c.sendError(fmt.Sprintf("Unknown message type '%s'.", msg.Type))
 		}

@@ -5,7 +5,8 @@
 		sendWebSocketMessage,
 		players,
 		gameState,
-		roomClosedMessage
+		roomClosedMessage,
+		chatMessages
 	} from '$lib/socketStore';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -18,6 +19,7 @@
 	export let data: PageData;
 
 	let hasJoined = false;
+	let chatInput = '';
 
 	let moveSoundX: HTMLAudioElement;
 	let moveSoundO: HTMLAudioElement;
@@ -94,6 +96,17 @@
 
 	function handleRematch() {
 		sendWebSocketMessage({ type: 'rematch_request' });
+	}
+
+	function handleSendMessage() {
+		if (chatInput.trim() === '') return;
+		sendWebSocketMessage({
+			type: 'chat_message',
+			payload: {
+				message: chatInput
+			}
+		});
+		chatInput = '';
 	}
 </script>
 
@@ -173,7 +186,7 @@
 				{/if}
 			</div>
 		</div>
-		<div class="w-full md:w-4/5">
+		<div class="w-full md:w-3/5">
 			{#if $gameState.players.length == 2}
 				<Board
 					board={$gameState.game.board}
@@ -185,6 +198,28 @@
 			{/if}
 			<div class="mt-2">
 				<GameStatus gameState={$gameState} {myTurn}></GameStatus>
+			</div>
+		</div>
+		<div
+			class="bg-surface-900 border-surface-400 mb-4 flex w-full flex-col justify-end border-2 md:w-1/5"
+		>
+			<div class="text-surface-100 flex-grow p-4">
+				{#each $chatMessages as msg}
+					<p>
+						<span class="text-primary-400">{msg.displayName}:</span>
+						{msg.message}
+					</p>
+				{/each}
+			</div>
+			<div class="flex gap-2 p-2">
+				<input
+					bind:value={chatInput}
+					placeholder="Type your message..."
+					class="bg-surface-800 border-surface-500 focus:ring-primary-400 w-full border-0 p-2 focus:ring-2"
+					on:keydown={(e) => e.key === 'Enter' && handleSendMessage()}
+				/>
+				<button class="bg-primary-400 text-surface-50 p-2" on:click={handleSendMessage}>Send</button
+				>
 			</div>
 		</div>
 	</div>

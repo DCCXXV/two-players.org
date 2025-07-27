@@ -75,7 +75,7 @@
 				class:border-primary-400={page.url.pathname.startsWith('/play')}
 			>
 				<a
-					class="hover:text-primary-100 transition-colors duration-200"
+					class="hover:text-primary-400 transition-colors duration-200"
 					class:text-primary-400={page.url.pathname.startsWith('/play')}
 					href="/play"
 				>
@@ -88,7 +88,7 @@
 				class:border-primary-400={page.url.pathname === '/explore'}
 			>
 				<a
-					class="hover:text-primary-100 transition-colors duration-200"
+					class="hover:text-primary-400 transition-colors duration-200"
 					class:text-primary-400={page.url.pathname === '/explore'}
 					href="/play"
 				>
@@ -101,7 +101,7 @@
 				class:border-primary-400={page.url.pathname === '/learn'}
 			>
 				<a
-					class="hover:text-primary-100 transition-colors duration-200"
+					class="hover:text-primary-400 transition-colors duration-200"
 					class:text-primary-400={page.url.pathname === '/learn'}
 					href="/play"
 				>
