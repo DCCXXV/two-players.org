@@ -1,13 +1,23 @@
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ params, fetch }) => {
+export const load: PageLoad = async ({ params, fetch, url }) => {
 	try {
 		const roomId = params.id;
 		const storedRoom = sessionStorage.getItem(`room_${roomId}`);
 
 		if (storedRoom) {
 			console.log('Room data found in sessionStorage');
-			return { room: JSON.parse(storedRoom), error: null };
+			const room = JSON.parse(storedRoom);
+			return {
+				room,
+				error: null,
+				meta: {
+					title: `Tic-Tac-Toe Game | Room ${roomId}`,
+					description: 'Join this Tic-Tac-Toe game and challenge your friend!',
+					imageUrl: `${url.origin}/screenshots/tic-tac-toe.png`,
+					url: url.href
+				}
+			};
 		}
 
 		const res = await fetch(import.meta.env.VITE_SOCKET_URL + `/api/v1/rooms/${roomId}`);
@@ -20,7 +30,16 @@ export const load: PageLoad = async ({ params, fetch }) => {
 		}
 
 		const room = await res.json();
-		return { room, error: null };
+		return {
+			room,
+			error: null,
+			meta: {
+				title: `Tic-Tac-Toe Game | Room ${roomId}`,
+				description: 'Join this Tic-Tac-Toe game and challenge your friend!',
+				imageUrl: `${url.origin}/screenshots/tic-tac-toe.png`,
+				url: url.href
+			}
+		};
 	} catch (e) {
 		return { room: null, error: e instanceof Error ? e.message : 'An unknown error occurred' };
 	}
