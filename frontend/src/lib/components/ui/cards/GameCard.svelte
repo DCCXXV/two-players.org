@@ -17,7 +17,7 @@
 
 <a href="/play/{path}">
 	<div
-		class="card group preset-filled-surface-100-900 hover:border-primary-400 relative flex aspect-[2/1] rounded-none shadow-sm hover:border-2"
+		class="card group preset-filled-surface-100-900 hover:border-primary-400 relative flex aspect-[2/1] rounded-none border-2 border-transparent shadow-sm transition-all duration-200 ease-in-out hover:border-2"
 	>
 		<img class="ms-4 aspect-square w-1/2 object-contain" {src} alt="Picture of a {title} match" />
 		<div class="m-6 flex w-1/2 flex-col">
@@ -36,14 +36,3 @@
 		</div>
 	</div>
 </a>
-
-<style>
-	.card {
-		transition: transform 0.1s ease-in;
-		cursor: pointer;
-	}
-
-	.card:hover {
-		transform: scale(1.01);
-	}
-</style>

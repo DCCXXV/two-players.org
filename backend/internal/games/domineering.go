@@ -61,17 +61,17 @@ func (d *Domineering) HandleMove(playerIndex int, move any) error {
 
 	symbol := d.playerSymbols[playerIndex]
 
-	if symbol == "h" && col == 7 {
+	if symbol == "H" && col == 7 {
 		d.Board[row][col] = symbol
 		d.Board[row][col-1] = symbol
-	} else if symbol == "v" && row == 7 {
+	} else if symbol == "V" && row == 7 {
 		d.Board[row][col] = symbol
 		d.Board[row-1][col] = symbol
 	} else {
 		d.Board[row][col] = symbol
-		if symbol == "h" {
+		if symbol == "H" {
 			d.Board[row][col+1] = symbol
-		} else if symbol == "v" {
+		} else if symbol == "V" {
 			d.Board[row+1][col] = symbol
 		}
 	}
@@ -108,19 +108,19 @@ func (d *Domineering) Reset() {
 	}
 	d.CurrentTurn = 0
 	d.Winner = ""
-	d.playerSymbols = [2]string{"h", "v"}
+	d.playerSymbols = [2]string{"H", "V"}
 	d.moves = 0
 }
 
 func (d *Domineering) checkWinner(symbol string) bool {
-	otherPlayerSymbol := "v"
-	if symbol == "v" {
-		otherPlayerSymbol = "h"
+	otherPlayerSymbol := "V"
+	if symbol == "V" {
+		otherPlayerSymbol = "H"
 	}
 
 	for r := 0; r < 8; r++ {
 		for c := 0; c < 8; c++ {
-			if otherPlayerSymbol == "h" {
+			if otherPlayerSymbol == "H" {
 				if c+1 < 8 && d.Board[r][c] == "" && d.Board[r][c+1] == "" {
 					return false
 				}

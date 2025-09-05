@@ -17,7 +17,7 @@ func TestDomineering_HandleMove_ValidMove(t *testing.T) {
 	}
 
 	state := game.GetGameState().(*Domineering)
-	if state.Board[0][0] != "h" || state.Board[0][1] != "h" {
+	if state.Board[0][0] != "H" || state.Board[0][1] != "H" {
 		t.Errorf("Expected cell 0,0 and 0,1 to be 'h' but got 0,0:'%s' and 0,1:'%s'", state.Board[0][0], state.Board[0][1])
 	}
 	if state.CurrentTurn != 1 {
@@ -30,7 +30,7 @@ func TestDomineering_HandleMove_ValidMove(t *testing.T) {
 	}
 
 	state = game.GetGameState().(*Domineering)
-	if state.Board[7][7] != "v" || state.Board[6][7] != "v" {
+	if state.Board[7][7] != "V" || state.Board[6][7] != "V" {
 		t.Errorf("Expected cell 7,7 to be 'v' and 6,7 to be 'v' but got 7,7:'%s' and 6,7:'%s'", state.Board[7][7], state.Board[6][7])
 	}
 	if state.CurrentTurn != 0 {
@@ -76,8 +76,8 @@ func TestDomineering_WinCondition(t *testing.T) {
 
 	for r := 0; r < 8; r++ {
 		for c := 0; c < 8; c += 2 {
-			d.Board[r][c] = "h"
-			d.Board[r][c+1] = "h"
+			d.Board[r][c] = "H"
+			d.Board[r][c+1] = "H"
 		}
 	}
 
@@ -91,7 +91,7 @@ func TestDomineering_WinCondition(t *testing.T) {
 		t.Fatalf("Expected no error for the winning move, but got %v", err)
 	}
 
-	if winner := game.GetWinner(); winner != "h" {
+	if winner := game.GetWinner(); winner != "H" {
 		t.Errorf("Expected winner to be 'h', but got '%s'", winner)
 	}
 

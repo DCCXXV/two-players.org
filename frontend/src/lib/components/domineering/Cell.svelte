@@ -4,7 +4,7 @@
 		disabled,
 		onClick
 	} = $props<{
-		value: 'X' | 'O' | '';
+		value: 'H' | 'V' | '';
 		disabled: boolean;
 		onClick: () => void;
 	}>();
@@ -13,8 +13,7 @@
 <button
 	onclick={onClick}
 	{disabled}
-	class="blackboard-darker erasdust-400 aspect-square w-full text-8xl font-bold disabled:opacity-100
-	{value === 'X' ? 'text-primary-300' : 'text-secondary-300'}
+	class="aspect-square w-full text-4xl font-bold disabled:opacity-100
 	{disabled === true ? 'hover:opacity-100' : 'hover:opacity-50'}"
 >
 	{value}
