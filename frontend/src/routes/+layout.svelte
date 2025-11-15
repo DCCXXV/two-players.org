@@ -114,6 +114,19 @@
 		>
 			<section
 				class="py-1.5-2 flex h-full flex-col justify-center px-8"
+				class:border-b-1={page.url.pathname === '/'}
+				class:border-lime-400={page.url.pathname === '/'}
+			>
+				<a
+					class="transition-colors duration-200 hover:text-lime-400"
+					class:text-lime-400={page.url.pathname === '/'}
+					href="/"
+				>
+					ABOUT
+				</a>
+			</section>
+			<section
+				class="py-1.5-2 flex h-full flex-col justify-center px-8"
 				class:border-b-1={page.url.pathname.startsWith('/play')}
 				class:border-lime-400={page.url.pathname.startsWith('/play')}
 			>
@@ -124,32 +137,6 @@
 				>
 					PLAY
 				</a>
-			</section>
-			<section
-				class="flex h-full flex-col justify-center px-8 py-2"
-				class:border-b-1={page.url.pathname === '/explore'}
-				class:border-lime-400={page.url.pathname === '/explore'}
-			>
-				<p
-					class="cursor-not-allowed transition-colors duration-200 hover:text-lime-400"
-					class:text-lime-400={page.url.pathname === '/explore'}
-					href="/explore"
-				>
-					EXPLORE
-				</p>
-			</section>
-			<section
-				class="p-y2 flex h-full flex-col justify-center px-8"
-				class:border-b-1={page.url.pathname === '/learn'}
-				class:border-lime-400={page.url.pathname === '/learn'}
-			>
-				<p
-					class="cursor-not-allowed transition-colors duration-200 hover:text-lime-400"
-					class:text-lime-400={page.url.pathname === '/learn'}
-					href="/learn"
-				>
-					LEARN
-				</p>
 			</section>
 		</nav>
 		<div class="hidden gap-6 sm:flex">

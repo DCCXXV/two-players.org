@@ -4,6 +4,9 @@
 	import Collapsible from '$lib/components/ui/Collapsible.svelte';
 	import RoomCard from '$lib/components/ui/RoomCard.svelte';
 	import { roomListUpdates } from '$lib/socketStore';
+	import { getAllGameConfigs } from '$lib/config/games';
+
+	const games = getAllGameConfigs();
 
 	interface Room {
 		id: string;
@@ -93,10 +96,18 @@
 
 <section class="my-8">
 	<Collapsible title="Available games">
-		<GameCard title="Tic Tac Toe" path="tic-tac-toe" />
-		<GameCard title="Domineering" path="domineering" />
-		<GameCard title="Nim" path="nim" />
-		<GameCard title="Dots and Boxes" path="dots-and-boxes" />
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			{#each games as game}
+				<a
+					href="/play/{game.path}"
+					class="rounded-0 group block border-b-1 border-stone-700 bg-transparent p-4 transition-all hover:border-lime-400"
+				>
+					<h3 class="mb-1 text-lg font-bold text-stone-300 group-hover:text-lime-400">
+						{game.displayName}
+					</h3>
+				</a>
+			{/each}
+		</div>
 	</Collapsible>
 </section>
 
@@ -114,9 +125,11 @@
 				>
 			</div>
 		{:else if allRooms.length > 0}
+		<div class="flex gap-4">
 			{#each allRooms as room (room.id)}
 				<RoomCard {room} />
 			{/each}
+		</div>
 		{:else}
 			<div class="w-full p-8 text-center">
 				<p class="text-stone-400">No public rooms available. Create one from a game page!</p>

@@ -1,15 +1,31 @@
 # two-players.org
 
-![a game of tic-tac-toe on two-players.org](screenshots/tic-tac-toe.png)
+![two-players.org landing page](screenshots/landing.png)
 
 ## Project Description
 
-two-players.org is a web platform designed to facilitate real-time multiplayer games directly from your browser. Currently, the platform supports the classic Tic-Tac-Toe game, allowing users to create game rooms and compete against each other.
+two-players.org is a web platform designed to facilitate playing combinatorial games vs other players directly from your browser. The platform features multiple classic combinatorial games like Tic-Tac-Toe, Domineering, and Nim.
 
 ### Features
 
-- **Real-time Games**: Experience fluid and reactive gameplay thanks to real-time communication.
-- **Intuitive Interface**: A clean and easy-to-use user interface for an enjoyable gaming experience.
+- **Multiple Games**: Play Tic-Tac-Toe, Domineering, Nim, and more classic strategy games.
+- **Real-time Gameplay**: Experience fluid and reactive gameplay with real-time communication.
+- **Game Rooms**: Create and join custom game rooms.
+- **Modern Interface**: A clean, responsive, and easy-to-use user interface for an enjoyable experience.
+- **Game Chat**: Communicate with your opponent during matches.
+- **Rematch System**: Quick rematch functionality to play multiple rounds.
+
+### Screenshots
+
+<div align="center">
+  
+![Game lobby](screenshots/tic-tac-toe_lobby.png)
+*Game lobby with player list and rematch options*
+
+![Domineering game](screenshots/domineering.png)
+*Playing Domineering - a tile-placement combinatorial game*
+
+</div>
 
 ### Technologies Used
 
