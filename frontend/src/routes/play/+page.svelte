@@ -19,7 +19,7 @@
 	let isLoadingRooms = $state(true);
 	let errorLoadingRooms = $state<string | null>(null);
 
-	const gameTypes = ['tic-tac-toe', 'domineering', 'dots-and-boxes'];
+	const gameTypes = ['tic-tac-toe', 'domineering', 'nim', 'dots-and-boxes'];
 
 	async function loadAllRooms() {
 		isLoadingRooms = true;
@@ -95,6 +95,7 @@
 	<Collapsible title="Available games">
 		<GameCard title="Tic Tac Toe" path="tic-tac-toe" />
 		<GameCard title="Domineering" path="domineering" />
+		<GameCard title="Nim" path="nim" />
 		<GameCard title="Dots and Boxes" path="dots-and-boxes" />
 	</Collapsible>
 </section>

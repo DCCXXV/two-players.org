@@ -43,6 +43,17 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
 			gameOver: '/sounds/gameOver.wav'
 		},
 		playerSymbols: ['P1', 'P2']
+	},
+	nim: {
+		id: 'nim',
+		displayName: 'Nim',
+		path: 'nim',
+		sounds: {
+			move1: '/sounds/moveX.wav',
+			move2: '/sounds/moveO.wav',
+			gameOver: '/sounds/gameOver.wav'
+		},
+		playerSymbols: ['P1', 'P2']
 	}
 };
 
