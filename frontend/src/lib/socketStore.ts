@@ -164,6 +164,7 @@ export function connectWebSocket(): void {
 
 				case 'join_success':
 					console.log('Successfully joined room:', message.payload);
+					chatMessages.set([]);
 					break;
 
 				case 'room_closed':
@@ -171,6 +172,7 @@ export function connectWebSocket(): void {
 					roomClosedMessage.set(message.payload.message || 'The host has left the room.');
 					gameState.set(null);
 					players.set([]);
+					chatMessages.set([]);
 					break;
 
 				case 'left_room':
@@ -181,6 +183,7 @@ export function connectWebSocket(): void {
 					});
 					gameState.set(null);
 					players.set([]);
+					chatMessages.set([]);
 					break;
 
 				case 'player_left':

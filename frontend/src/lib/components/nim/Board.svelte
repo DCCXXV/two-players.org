@@ -43,6 +43,10 @@
 		{/each}
 	</div>
 
+	<div class="text-center text-sm text-stone-400">
+		<p class="text-lg font-bold text-stone-400">{sticks} sticks remaining</p>
+	</div>
+
 	<div class="flex flex-col items-center gap-4">
 		<p class="text-lg text-stone-300">How many sticks will you take?</p>
 
@@ -73,9 +77,5 @@
 			Take {selectedCount || ''}
 			{selectedCount === 1 ? 'Stick' : 'Sticks'}
 		</button>
-	</div>
-
-	<div class="text-center text-sm text-stone-400">
-		<p class="text-lg font-bold text-amber-400">{sticks} sticks remaining</p>
 	</div>
 </div>

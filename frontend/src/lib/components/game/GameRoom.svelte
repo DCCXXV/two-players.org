@@ -15,6 +15,7 @@
 	} from '$lib/socketStore';
 	import RematchButton from '$lib/components/ui/RematchButton.svelte';
 	import Collapsible from '$lib/components/ui/Collapsible.svelte';
+	import GameChat from '$lib/components/game/GameChat.svelte';
 	import type { Snippet } from 'svelte';
 
 	interface Room {
@@ -157,8 +158,8 @@
 		</button>
 	</div>
 
-	<div class="flex flex-col justify-between gap-4 md:flex-row">
-		<div class="w-full md:w-1/5">
+	<div class="flex flex-col justify-between gap-2 md:flex-row">
+		<div class="w-full md:w-1/4">
 			<Collapsible title="Players">
 				{#if $gameState?.players?.length > 0}
 					<div class="w-full border-b-1 border-stone-700 bg-stone-950">
@@ -216,7 +217,7 @@
 			{/if}
 		</div>
 
-		<div class="w-full md:w-3/5">
+		<div class="w-full md:w-2/5">
 			{@render boardComponent({
 				gameState: $gameState,
 				myTurn,
@@ -226,7 +227,11 @@
 				{@render gameStatusComponent({ gameState: $gameState, myTurn })}
 			</div>
 		</div>
-		<div class="w-full md:w-1/5"></div>
+		<div class="w-full md:w-1/4">
+			<div class="h-[600px]">
+				<GameChat />
+			</div>
+		</div>
 	</div>
 {:else}
 	<div class="text-center">

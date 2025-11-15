@@ -31,6 +31,7 @@ type Manager struct {
 	clients           map[uuid.UUID]*Client
 	rooms             map[uuid.UUID]*Room
 	logger            *slog.Logger
+	moderator         *ChatModerator
 }
 
 type GameInstance = games.Game
@@ -58,9 +59,10 @@ func NewManager(cfg *config.Config, cs service.ConnectionService, rs service.Roo
 				return false
 			},
 		},
-		clients: make(map[uuid.UUID]*Client),
-		rooms:   make(map[uuid.UUID]*Room),
-		logger:  appLogger.Get(),
+		clients:   make(map[uuid.UUID]*Client),
+		rooms:     make(map[uuid.UUID]*Room),
+		logger:    appLogger.Get(),
+		moderator: NewChatModerator(),
 	}
 
 	m.logger.Info("WebSocket manager initialized")
