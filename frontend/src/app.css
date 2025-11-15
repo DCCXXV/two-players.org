@@ -2,12 +2,6 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-@import '@skeletonlabs/skeleton';
-@import '@skeletonlabs/skeleton/optional/presets';
-@import '@skeletonlabs/skeleton/themes/cerberus';
-@import '@skeletonlabs/skeleton/optional/presets';
-
-@source '../node_modules/@skeletonlabs/skeleton-svelte/dist';
 
 @font-face {
 	font-family: 'Eraser Dust';
@@ -47,6 +41,73 @@
 	background-color: #182220;
 }
 
+.titillium-web-extralight {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.titillium-web-light {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.titillium-web-regular {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.titillium-web-semibold {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.titillium-web-bold {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.titillium-web-black {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.titillium-web-extralight-italic {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 200;
+  font-style: italic;
+}
+
+.titillium-web-light-italic {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.titillium-web-regular-italic {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.titillium-web-semibold-italic {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.titillium-web-bold-italic {
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
+
 @layer utilities {
 	@media (min-width: 1200px) and (orientation: landscape) {
 		.lg-landscape\:px-4 {
@@ -61,209 +122,4 @@
 			padding-right: 8rem;
 		}
 	}
-}
-[data-theme='twoplayers'] {
-	--text-scaling: 1.067;
-	--base-font-color: var(--color-surface-50);
-	--base-font-color-dark: var(--color-surface-50);
-	--base-font-family: 'Inter', sans-serif;
-	--base-font-size: inherit;
-	--base-line-height: inherit;
-	--base-font-weight: normal;
-	--base-font-style: normal;
-	--base-letter-spacing: 0em;
-	--heading-font-color: var(--color-surface-50);
-	--heading-font-color-dark: var(--color-surface-50);
-	--heading-font-family: inherit;
-	--heading-font-weight: bold;
-	--heading-font-style: normal;
-	--heading-letter-spacing: inherit;
-	--anchor-font-color: var(--color-primary-500);
-	--anchor-font-color-dark: var(--color-primary-500);
-	--anchor-font-family: inherit;
-	--anchor-font-size: inherit;
-	--anchor-line-height: inherit;
-	--anchor-font-weight: inherit;
-	--anchor-font-style: inherit;
-	--anchor-letter-spacing: inherit;
-	--anchor-text-decoration: none;
-	--anchor-text-decoration-hover: underline;
-	--anchor-text-decoration-active: none;
-	--anchor-text-decoration-focus: none;
-	--spacing: 0.25rem;
-	--radius-base: 0.375rem;
-	--radius-container: 0.75rem;
-	--default-border-width: 1px;
-	--default-divide-width: 1px;
-	--default-ring-width: 1px;
-	--body-background-color: var(--color-surface-950);
-	--body-background-color-dark: var(--color-surface-950);
-	--color-primary-50: oklch(94.69% 0.01 128.45deg);
-	--color-primary-100: oklch(85.34% 0.04 130.48deg);
-	--color-primary-200: oklch(75.61% 0.06 130.77deg);
-	--color-primary-300: oklch(66% 0.08 131.29deg);
-	--color-primary-400: oklch(55.89% 0.11 132.25deg);
-	--color-primary-500: oklch(45.98% 0.12 134.5deg);
-	--color-primary-600: oklch(41.87% 0.11 134.33deg);
-	--color-primary-700: oklch(37.65% 0.1 134.12deg);
-	--color-primary-800: oklch(32.94% 0.08 133.93deg);
-	--color-primary-900: oklch(28.45% 0.07 133.53deg);
-	--color-primary-950: oklch(23.78% 0.06 132.79deg);
-	--color-primary-contrast-dark: var(--color-primary-50);
-	--color-primary-contrast-light: var(--color-primary-50);
-	--color-primary-contrast-50: var(--color-primary-50);
-	--color-primary-contrast-100: var(--color-primary-50);
-	--color-primary-contrast-200: var(--color-primary-50);
-	--color-primary-contrast-300: var(--color-primary-50);
-	--color-primary-contrast-400: var(--color-primary-50);
-	--color-primary-contrast-500: var(--color-primary-50);
-	--color-primary-contrast-600: var(--color-primary-50);
-	--color-primary-contrast-700: var(--color-primary-50);
-	--color-primary-contrast-800: var(--color-primary-50);
-	--color-primary-contrast-900: var(--color-primary-50);
-	--color-primary-contrast-950: var(--color-primary-50);
-	--color-secondary-50: oklch(89.31% 0.03 23.22deg);
-	--color-secondary-100: oklch(80.8% 0.05 24.34deg);
-	--color-secondary-200: oklch(72.27% 0.08 24.13deg);
-	--color-secondary-300: oklch(64.02% 0.11 24.83deg);
-	--color-secondary-400: oklch(56.18% 0.14 26.26deg);
-	--color-secondary-500: oklch(49.29% 0.16 28.62deg);
-	--color-secondary-600: oklch(46.62% 0.15 28.8deg);
-	--color-secondary-700: oklch(43.99% 0.14 28.65deg);
-	--color-secondary-800: oklch(41.25% 0.13 28.42deg);
-	--color-secondary-900: oklch(38.54% 0.12 28.2deg);
-	--color-secondary-950: oklch(35.7% 0.11 28.42deg);
-	--color-secondary-contrast-dark: var(--color-secondary-50);
-	--color-secondary-contrast-light: var(--color-secondary-50);
-	--color-secondary-contrast-50: var(--color-secondary-50);
-	--color-secondary-contrast-100: var(--color-secondary-50);
-	--color-secondary-contrast-200: var(--color-secondary-50);
-	--color-secondary-contrast-300: var(--color-secondary-50);
-	--color-secondary-contrast-400: var(--color-secondary-50);
-	--color-secondary-contrast-500: var(--color-secondary-50);
-	--color-secondary-contrast-600: var(--color-secondary-50);
-	--color-secondary-contrast-700: var(--color-secondary-50);
-	--color-secondary-contrast-800: var(--color-secondary-50);
-	--color-secondary-contrast-900: var(--color-secondary-50);
-	--color-secondary-contrast-950: var(--color-secondary-50);
-	--color-tertiary-50: oklch(100% 0 none);
-	--color-tertiary-100: oklch(93.44% 0.01 275.11deg);
-	--color-tertiary-200: oklch(87% 0.01 269.58deg);
-	--color-tertiary-300: oklch(80.28% 0.02 274.8deg);
-	--color-tertiary-400: oklch(73.59% 0.02 271.98deg);
-	--color-tertiary-500: oklch(66.5% 0.03 272.33deg);
-	--color-tertiary-600: oklch(59.39% 0.03 269.45deg);
-	--color-tertiary-700: oklch(51.91% 0.03 271.49deg);
-	--color-tertiary-800: oklch(44.26% 0.03 267.56deg);
-	--color-tertiary-900: oklch(36.16% 0.03 269.66deg);
-	--color-tertiary-950: oklch(27.76% 0.03 266.1deg);
-	--color-tertiary-contrast-dark: var(--color-tertiary-50);
-	--color-tertiary-contrast-light: var(--color-tertiary-50);
-	--color-tertiary-contrast-50: var(--color-tertiary-50);
-	--color-tertiary-contrast-100: var(--color-tertiary-50);
-	--color-tertiary-contrast-200: var(--color-tertiary-50);
-	--color-tertiary-contrast-300: var(--color-tertiary-50);
-	--color-tertiary-contrast-400: var(--color-tertiary-50);
-	--color-tertiary-contrast-500: var(--color-tertiary-50);
-	--color-tertiary-contrast-600: var(--color-tertiary-50);
-	--color-tertiary-contrast-700: var(--color-tertiary-50);
-	--color-tertiary-contrast-800: var(--color-tertiary-50);
-	--color-tertiary-contrast-900: var(--color-tertiary-50);
-	--color-tertiary-contrast-950: var(--color-tertiary-50);
-	--color-success-50: oklch(93.85% 0.09 179.23deg);
-	--color-success-100: oklch(91.52% 0.1 178.84deg);
-	--color-success-200: oklch(89.21% 0.11 177.71deg);
-	--color-success-300: oklch(87.16% 0.12 176.81deg);
-	--color-success-400: oklch(84.95% 0.12 175.68deg);
-	--color-success-500: oklch(82.81% 0.13 175.08deg);
-	--color-success-600: oklch(72.74% 0.11 175.88deg);
-	--color-success-700: oklch(62.29% 0.1 176.23deg);
-	--color-success-800: oklch(51.13% 0.08 178.72deg);
-	--color-success-900: oklch(39.58% 0.06 180.47deg);
-	--color-success-950: oklch(27.14% 0.04 187.07deg);
-	--color-success-contrast-dark: var(--color-success-50);
-	--color-success-contrast-light: var(--color-success-50);
-	--color-success-contrast-50: var(--color-success-50);
-	--color-success-contrast-100: var(--color-success-50);
-	--color-success-contrast-200: var(--color-success-50);
-	--color-success-contrast-300: var(--color-success-50);
-	--color-success-contrast-400: var(--color-success-50);
-	--color-success-contrast-500: var(--color-success-50);
-	--color-success-contrast-600: var(--color-success-50);
-	--color-success-contrast-700: var(--color-success-50);
-	--color-success-contrast-800: var(--color-success-50);
-	--color-success-contrast-900: var(--color-success-50);
-	--color-success-contrast-950: var(--color-success-50);
-	--color-warning-50: oklch(95.58% 0.05 86.88deg);
-	--color-warning-100: oklch(92.81% 0.07 83.57deg);
-	--color-warning-200: oklch(90.03% 0.09 82.15deg);
-	--color-warning-300: oklch(87.42% 0.11 80.05deg);
-	--color-warning-400: oklch(84.77% 0.12 78.8deg);
-	--color-warning-500: oklch(82.32% 0.14 76.75deg);
-	--color-warning-600: oklch(76.3% 0.14 73.06deg);
-	--color-warning-700: oklch(70.33% 0.13 68.51deg);
-	--color-warning-800: oklch(63.98% 0.13 63.37deg);
-	--color-warning-900: oklch(57.92% 0.13 57.8deg);
-	--color-warning-950: oklch(51.71% 0.13 52.01deg);
-	--color-warning-contrast-dark: var(--color-warning-50);
-	--color-warning-contrast-light: var(--color-warning-50);
-	--color-warning-contrast-50: var(--color-warning-50);
-	--color-warning-contrast-100: var(--color-warning-50);
-	--color-warning-contrast-200: var(--color-warning-50);
-	--color-warning-contrast-300: var(--color-warning-50);
-	--color-warning-contrast-400: var(--color-warning-50);
-	--color-warning-contrast-500: var(--color-warning-50);
-	--color-warning-contrast-600: var(--color-warning-50);
-	--color-warning-contrast-700: var(--color-warning-50);
-	--color-warning-contrast-800: var(--color-warning-50);
-	--color-warning-contrast-900: var(--color-warning-50);
-	--color-warning-contrast-950: var(--color-warning-50);
-	--color-error-50: oklch(89.99% 0.04 14.04deg);
-	--color-error-100: oklch(83.49% 0.07 19.81deg);
-	--color-error-200: oklch(77.5% 0.11 22.66deg);
-	--color-error-300: oklch(71.84% 0.15 24.01deg);
-	--color-error-400: oklch(67.29% 0.19 26.46deg);
-	--color-error-500: oklch(63.71% 0.22 28.57deg);
-	--color-error-600: oklch(59.37% 0.21 28.57deg);
-	--color-error-700: oklch(54.85% 0.2 28.43deg);
-	--color-error-800: oklch(50.57% 0.19 28.68deg);
-	--color-error-900: oklch(46.07% 0.18 28.68deg);
-	--color-error-950: oklch(41.74% 0.17 29.06deg);
-	--color-error-contrast-dark: var(--color-error-50);
-	--color-error-contrast-light: var(--color-error-50);
-	--color-error-contrast-50: var(--color-error-50);
-	--color-error-contrast-100: var(--color-error-50);
-	--color-error-contrast-200: var(--color-error-50);
-	--color-error-contrast-300: var(--color-error-50);
-	--color-error-contrast-400: var(--color-error-50);
-	--color-error-contrast-500: var(--color-error-50);
-	--color-error-contrast-600: var(--color-error-50);
-	--color-error-contrast-700: var(--color-error-50);
-	--color-error-contrast-800: var(--color-error-50);
-	--color-error-contrast-900: var(--color-error-50);
-	--color-error-contrast-950: var(--color-error-50);
-	--color-surface-50: oklch(93.7% 0 none);
-	--color-surface-100: oklch(82.5% 0 17.87deg);
-	--color-surface-200: oklch(70.76% 0.01 17.5deg);
-	--color-surface-300: oklch(58.66% 0.01 17.54deg);
-	--color-surface-400: oklch(45.76% 0.02 17.8deg);
-	--color-surface-500: oklch(32.09% 0.02 18.3deg);
-	--color-surface-600: oklch(30.26% 0.02 18.21deg);
-	--color-surface-700: oklch(28.13% 0.02 18.22deg);
-	--color-surface-800: oklch(26.24% 0.01 18.1deg);
-	--color-surface-900: oklch(24.02% 0.01 18.09deg);
-	--color-surface-950: oklch(22.06% 0.01 17.94deg);
-	--color-surface-contrast-dark: var(--color-surface-50);
-	--color-surface-contrast-light: var(--color-surface-50);
-	--color-surface-contrast-50: var(--color-surface-50);
-	--color-surface-contrast-100: var(--color-surface-50);
-	--color-surface-contrast-200: var(--color-surface-50);
-	--color-surface-contrast-300: var(--color-surface-50);
-	--color-surface-contrast-400: var(--color-surface-50);
-	--color-surface-contrast-500: var(--color-surface-50);
-	--color-surface-contrast-600: var(--color-surface-50);
-	--color-surface-contrast-700: var(--color-surface-50);
-	--color-surface-contrast-800: var(--color-surface-50);
-	--color-surface-contrast-900: var(--color-surface-50);
-	--color-surface-contrast-950: var(--color-surface-50);
 }

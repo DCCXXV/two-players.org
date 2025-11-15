@@ -4,31 +4,23 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/DCCXXV/twoplayers/backend/internal/games"
 	"github.com/google/uuid"
 )
 
-// handleJoinRoom is the handler for the "join_room" message.
 func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
-	log.Printf("🔄 handleJoinRoom: Starting for client %s", client.displayName)
-
 	var req struct {
 		RoomID string `json:"roomId"`
 	}
 	if err := json.Unmarshal(payload, &req); err != nil {
-		log.Printf("❌ handleJoinRoom: Invalid payload: %v", err)
 		client.sendError("Invalid payload for join_room")
 		return
 	}
 
-	log.Printf("🔄 handleJoinRoom: Parsed roomId: %s", req.RoomID)
-
 	roomID, err := uuid.Parse(req.RoomID)
 	if err != nil {
-		log.Printf("❌ handleJoinRoom: Invalid UUID: %v", err)
 		client.sendError("Invalid room ID format")
 		return
 	}
@@ -41,7 +33,6 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 	m.mu.Lock()
 	room, ok := m.rooms[roomID]
 	if !ok {
-		// The room is not in memory, load it from the DB
 		dbRoom, err := m.roomService.GetRoomByID(context.Background(), roomID)
 		if err != nil {
 			m.mu.Unlock()
@@ -57,7 +48,6 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 			return
 		}
 
-		// Create the room in memory
 		room = &Room{
 			ID:              uuid.UUID(dbRoom.ID.Bytes),
 			GameType:        dbRoom.GameType,
@@ -66,16 +56,13 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 			Game:            game,
 			manager:         m,
 			MaxPlayers:      m.getMaxPlayersForGame(dbRoom.GameType),
-			rematchRequests: make(map[uuid.UUID]bool), // Initialize rematch map
+			rematchRequests: make(map[uuid.UUID]bool),
 		}
 		m.rooms[room.ID] = room
-		log.Printf("Activated room %s in memory.", room.ID)
 	}
 	m.mu.Unlock()
 
-	log.Printf("🔄 handleJoinRoom: About to call room.addClient")
 	room.addClient(client)
-	log.Printf("✅ handleJoinRoom: Completed successfully")
 }
 
 func (c *Client) handleGameMove(payload json.RawMessage) {
@@ -121,14 +108,12 @@ func (r *Room) handleRematch(client *Client) {
 
 	r.mu.Unlock()
 
-	// Broadcast state update after every rematch request
 	r.broadcastRoomState()
 
 	if allPlayersRequestedRematch {
 		r.mu.Lock()
 		r.Game.Reset()
 
-		// Swap roles for the new game
 		var player0, player1 *Client
 		for _, p := range r.getPlayersInternal() {
 			if p.role == "player_0" {
@@ -144,7 +129,6 @@ func (r *Room) handleRematch(client *Client) {
 		r.rematchRequests = make(map[uuid.UUID]bool)
 		r.mu.Unlock()
 
-		// Broadcast the new game state after reset
 		go r.broadcastRoomState()
 	}
 }
@@ -169,4 +153,37 @@ func (r *Room) handleChatMessage(client *Client, payload json.RawMessage) {
 	}
 
 	r.broadcastMessage("chat_message", chatMessage)
+}
+
+func (m *Manager) handleUpdateDisplayName(client *Client, payload json.RawMessage) {
+	var req struct {
+		DisplayName string `json:"displayName"`
+	}
+	if err := json.Unmarshal(payload, &req); err != nil {
+		client.sendError("Invalid payload for update_display_name")
+		return
+	}
+
+	newName := req.DisplayName
+	if newName == "" {
+		client.sendError("Display name cannot be empty")
+		return
+	}
+
+	oldName := client.displayName
+	client.displayName = newName
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := m.connectionService.UpdateConnectionName(ctx, oldName, newName)
+	if err != nil {
+		m.logger.Error("Failed to update display name in DB", "old_name", oldName, "new_name", newName, "error", err)
+		client.displayName = oldName
+		client.sendError("Failed to update display name")
+		return
+	}
+
+	m.logger.Info("Display name updated", "old_name", oldName, "new_name", newName, "client_id", client.id)
+	client.sendMessage("connection_ready", map[string]string{"displayName": newName})
 }

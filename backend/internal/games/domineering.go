@@ -55,23 +55,34 @@ func (d *Domineering) HandleMove(playerIndex int, move any) error {
 		return fmt.Errorf("out of bounds")
 	}
 
-	if d.Board[row][col] != "" {
-		return fmt.Errorf("cell is already occupied")
-	}
-
 	symbol := d.playerSymbols[playerIndex]
 
-	if symbol == "H" && col == 7 {
-		d.Board[row][col] = symbol
-		d.Board[row][col-1] = symbol
-	} else if symbol == "V" && row == 7 {
-		d.Board[row][col] = symbol
-		d.Board[row-1][col] = symbol
-	} else {
-		d.Board[row][col] = symbol
-		if symbol == "H" {
+	if symbol == "H" {
+		if col == 7 {
+			if d.Board[row][col] != "" || d.Board[row][col-1] != "" {
+				return fmt.Errorf("cell is already occupied")
+			}
+			d.Board[row][col] = symbol
+			d.Board[row][col-1] = symbol
+		} else {
+			if d.Board[row][col] != "" || d.Board[row][col+1] != "" {
+				return fmt.Errorf("cell is already occupied")
+			}
+			d.Board[row][col] = symbol
 			d.Board[row][col+1] = symbol
-		} else if symbol == "V" {
+		}
+	} else if symbol == "V" {
+		if row == 7 {
+			if d.Board[row][col] != "" || d.Board[row-1][col] != "" {
+				return fmt.Errorf("cell is already occupied")
+			}
+			d.Board[row][col] = symbol
+			d.Board[row-1][col] = symbol
+		} else {
+			if d.Board[row][col] != "" || d.Board[row+1][col] != "" {
+				return fmt.Errorf("cell is already occupied")
+			}
+			d.Board[row][col] = symbol
 			d.Board[row+1][col] = symbol
 		}
 	}
@@ -118,19 +129,22 @@ func (d *Domineering) checkWinner(symbol string) bool {
 		otherPlayerSymbol = "H"
 	}
 
+	return !d.hasValidMoves(otherPlayerSymbol)
+}
+
+func (d *Domineering) hasValidMoves(symbol string) bool {
 	for r := 0; r < 8; r++ {
 		for c := 0; c < 8; c++ {
-			if otherPlayerSymbol == "H" {
+			if symbol == "H" {
 				if c+1 < 8 && d.Board[r][c] == "" && d.Board[r][c+1] == "" {
-					return false
+					return true
 				}
 			} else {
 				if r+1 < 8 && d.Board[r][c] == "" && d.Board[r+1][c] == "" {
-					return false
+					return true
 				}
 			}
 		}
 	}
-
-	return true
+	return false
 }

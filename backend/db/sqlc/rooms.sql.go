@@ -128,14 +128,16 @@ const listPublicRoomsWithPlayers = `-- name: ListPublicRoomsWithPlayers :many
 SELECT
     r.id,
     r.name,
+    r.game_type,
     r.is_private,
+    r.created_at,
     p1.player_display_name AS created_by,
     p2.player_display_name AS other_player
 FROM rooms r
 LEFT JOIN players p1 ON p1.room_id = r.id AND p1.player_order = 0
 LEFT JOIN players p2 ON p2.room_id = r.id AND p2.player_order = 1
 WHERE r.is_private = FALSE AND r.game_type = $1
-ORDER BY r.created_at DESC
+ORDER BY r.created_at ASC
 LIMIT $2 OFFSET $3
 `
 
@@ -146,11 +148,13 @@ type ListPublicRoomsWithPlayersParams struct {
 }
 
 type ListPublicRoomsWithPlayersRow struct {
-	ID          pgtype.UUID `json:"id"`
-	Name        string      `json:"name"`
-	IsPrivate   bool        `json:"is_private"`
-	CreatedBy   pgtype.Text `json:"created_by"`
-	OtherPlayer pgtype.Text `json:"other_player"`
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	GameType    string             `json:"game_type"`
+	IsPrivate   bool               `json:"is_private"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	CreatedBy   pgtype.Text        `json:"created_by"`
+	OtherPlayer pgtype.Text        `json:"other_player"`
 }
 
 // Retrieve all rooms that are not private with player info, ordered by creation time descending.
@@ -166,7 +170,9 @@ func (q *Queries) ListPublicRoomsWithPlayers(ctx context.Context, arg ListPublic
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.GameType,
 			&i.IsPrivate,
+			&i.CreatedAt,
 			&i.CreatedBy,
 			&i.OtherPlayer,
 		); err != nil {

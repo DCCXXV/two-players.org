@@ -50,12 +50,11 @@ export type WebSocketMessage =
 	| { type: 'room_closed'; payload: RoomClosedPayload }
 	| { type: 'error'; payload: ErrorPayload }
 	| { type: 'chat_message'; payload: ChatMessagePayload }
-	| { type: string; payload?: any }; // Fallback for unknown types
+	| { type: string; payload?: any };
 
 const httpBackendUrl: string = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8080';
 const wsBackendUrl = httpBackendUrl.replace(/^http/, 'ws');
 
-// Stores
 export const socket: Writable<WebSocket | null> = writable(null);
 export const isConnected: Writable<boolean> = writable(false);
 export const displayName: Writable<string> = writable('');
@@ -68,10 +67,9 @@ export const chatMessages: Writable<ChatMessage[]> = writable([]);
 let socketInstance: WebSocket | null = null;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
-const reconnectInterval = 3000; // ms
+const reconnectInterval = 3000;
 export function connectWebSocket(): void {
 	if (socketInstance && socketInstance.readyState < 2) {
-		// 0=CONNECTING, 1=OPEN
 		console.log('WebSocket already connected or connecting.');
 		return;
 	}
@@ -113,10 +111,10 @@ export function connectWebSocket(): void {
 	};
 
 	socketInstance.onmessage = (event) => {
-		console.log('🔔 WebSocket RAW message received:', event.data); // ← Log TODOS los mensajes
+		console.log('WebSocket RAW message received:', event.data);
 		try {
 			const message: WebSocketMessage = JSON.parse(event.data);
-			console.log('📦 Parsed message - Type:', message.type, 'Payload:', message.payload);
+			console.log('Parsed message - Type:', message.type, 'Payload:', message.payload);
 
 			switch (message.type) {
 				case 'connection_ready':
@@ -134,38 +132,45 @@ export function connectWebSocket(): void {
 					break;
 
 				case 'game_state_update':
-					console.log('🎮 Game state update received:', message.payload);
+					console.log('Game state update received:', message.payload);
 					gameState.set(message.payload);
 					if (message.payload && Array.isArray(message.payload.players)) {
-						console.log('👥 Updating players:', message.payload.players);
+						console.log('Updating players:', message.payload.players);
 						players.set(message.payload.players);
 					}
 					break;
 
 				case 'join_success':
-					console.log('✅ Successfully joined room:', message.payload);
+					console.log('Successfully joined room:', message.payload);
 					break;
 
 				case 'room_closed':
-					console.log('🚪 Room closed by host:', message.payload);
+					console.log('Room closed by host:', message.payload);
 					roomClosedMessage.set(message.payload.message || 'The host has left the room.');
-					// Reset game state as well
 					gameState.set(null);
 					players.set([]);
 					break;
 
 				case 'error':
-					console.log('❌ Error received:', message.payload);
-					errorMessage.set(message.payload.message);
+					console.log('Error received:', message.payload);
+					if (message.payload.message === 'You are already in another room.') {
+						const currentGame = gameState.subscribe((value) => value)();
+						if (currentGame && !currentGame.game?.winner) {
+							alert('You are already in an active game. Please finish or leave that game first.');
+							window.history.back();
+						}
+					} else {
+						errorMessage.set(message.payload.message);
+					}
 					break;
 
 				case 'chat_message':
-					console.log('💬 Chat message received:', message.payload);
+					console.log('Chat message received:', message.payload);
 					chatMessages.update((messages) => [...messages, message.payload]);
 					break;
 
 				default:
-					console.warn('⚠️  Unknown message type:', message.type, 'Full message:', message);
+					console.warn('Unknown message type:', message.type, 'Full message:', message);
 			}
 		} catch (e) {
 			console.error('Failed to parse WebSocket message:', e, event.data);
@@ -189,5 +194,23 @@ export function sendWebSocketMessage(message: WebSocketMessage): void {
 		}
 	} else {
 		console.error('WebSocket not connected, cannot send message:', message.type);
+	}
+}
+
+export function updateDisplayName(newName: string): void {
+	if (socketInstance && socketInstance.readyState === WebSocket.OPEN) {
+		try {
+			const message = {
+				type: 'update_display_name',
+				payload: { displayName: newName }
+			};
+			const jsonString = JSON.stringify(message);
+			socketInstance.send(jsonString);
+			console.log('Display name update sent:', jsonString);
+		} catch (e) {
+			console.error('Failed to send display name update:', e);
+		}
+	} else {
+		console.error('WebSocket not connected, cannot update display name');
 	}
 }

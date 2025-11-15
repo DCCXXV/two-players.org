@@ -15,19 +15,16 @@ import (
 
 var ErrRoomNotFound = errors.New("room not found")
 
-
 type JoinRoomInput struct {
 	RoomID      uuid.UUID
 	DisplayName string
 }
-
 
 type JoinRoomResult struct {
 	Success bool
 	Role    string // "player_0", "player_1", "spectator"
 	Message string
 }
-
 
 type RoomService interface {
 	CreateRoom(ctx context.Context, params CreateRoomParams) (db.Room, error)
@@ -98,25 +95,19 @@ func (s *roomService) ListPublicRoomsWithPlayers(ctx context.Context, gameType s
 func (s *roomService) JoinRoom(ctx context.Context, input JoinRoomInput) (*JoinRoomResult, error) {
 	var result JoinRoomResult
 
-	// Start a transaction to ensure data consistency
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not begin transaction: %w", err)
 	}
-	// Make sure the transaction is rolled back if something goes wrong
 	defer tx.Rollback(ctx)
 
 	qtx := s.queries.WithTx(tx)
 
-	// 1. Get the current players in the room (within the tx to lock)
-	// With pgx/v5 and sqlc, a "many" query that returns no rows results in an empty slice and a nil error,
-	// not sql.ErrNoRows. Therefore, we only need to check for a real error.
 	players, err := qtx.GetPlayersByRoomID(ctx, pgtype.UUID{Bytes: input.RoomID, Valid: true})
 	if err != nil {
 		return nil, fmt.Errorf("could not get players in room: %w", err)
 	}
 
-	// 2. Check if the player is already in the room
 	for _, p := range players {
 		if p.PlayerDisplayName == input.DisplayName {
 			return &JoinRoomResult{
@@ -127,10 +118,8 @@ func (s *roomService) JoinRoom(ctx context.Context, input JoinRoomInput) (*JoinR
 		}
 	}
 
-	// 3. Decide if the user can join as a player or must be a spectator
 	if len(players) < 2 {
-		// There is space, join as a player!
-		playerOrder := len(players) // 0 for the first, 1 for the second
+		playerOrder := len(players)
 
 		_, err := qtx.CreatePlayer(ctx, db.CreatePlayerParams{
 			RoomID:            pgtype.UUID{Bytes: input.RoomID, Valid: true},
@@ -139,7 +128,6 @@ func (s *roomService) JoinRoom(ctx context.Context, input JoinRoomInput) (*JoinR
 		})
 
 		if err != nil {
-			// If it fails, it could be due to a race condition that the UNIQUE constraint has stopped.
 			return nil, fmt.Errorf("could not add player to game: %w", err)
 		}
 
@@ -149,14 +137,12 @@ func (s *roomService) JoinRoom(ctx context.Context, input JoinRoomInput) (*JoinR
 		log.Printf("Player %s joined room %s as player %d", input.DisplayName, input.RoomID, playerOrder)
 
 	} else {
-		// The room is full, join as a spectator.
 		result.Success = true
 		result.Role = "spectator"
 		result.Message = "The room is full. You are joining as a spectator."
 		log.Printf("Player %s joined room %s as spectator", input.DisplayName, input.RoomID)
 	}
 
-	// 4. If everything went well, commit the transaction
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("could not commit transaction: %w", err)
 	}

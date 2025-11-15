@@ -21,14 +21,12 @@ func main() {
 	appLogger.Init()
 	log := appLogger.Get()
 
-	// 1. Load Configuration
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Error("FATAL: Failed to load configuration", "error", err)
 		os.Exit(1)
 	}
 
-	// 2. Establish Database Connection
 	pool, err := database.NewDatabaseConnection(cfg)
 	if err != nil {
 		log.Error("FATAL: Failed to connect to database", "error", err)
@@ -36,22 +34,18 @@ func main() {
 	}
 	defer pool.Close()
 
-	// 3. Initialize sqlc Queries
 	queries := db.New(pool)
 
-	// 4. Initialize Services
 	roomService := service.NewRoomService(queries, pool)
 	connectionService := service.NewConnectionService(queries)
 	playerService := service.NewPlayerService(queries)
 
-	// 5. Initialize Realtime Manager
 	rtManager, err := realtime.NewManager(cfg, connectionService, roomService, playerService)
 	if err != nil {
 		log.Error("FATAL: Failed to initialize realtime manager", "error", err)
 		os.Exit(1)
 	}
 
-	// 6. Initialize Gin Router
 	router := gin.Default()
 	allowedOrigins := strings.Split(cfg.AllowedOrigins, ",")
 	corsConfig := cors.Config{
@@ -63,11 +57,9 @@ func main() {
 	router.Use(cors.New(corsConfig))
 	router.Use(cors.New(corsConfig))
 
-	// 7. Setup Handlers
 	httpHandler := handlers.NewHTTPHandler(roomService, playerService, connectionService)
 	wsHandler := handlers.NewWebSocketHandler(rtManager)
 
-	// 8. Register Routes
 	apiV1 := router.Group("/api/v1")
 	{
 		apiV1.POST("/rooms", httpHandler.CreateRoom)
@@ -79,7 +71,6 @@ func main() {
 
 	router.GET("/ws", wsHandler.HandleConnection)
 
-	// 9. Start Server
 	log.Info("Server starting on port", "port", cfg.ServerPort)
 	server := &http.Server{
 		Addr:    cfg.ServerPort,

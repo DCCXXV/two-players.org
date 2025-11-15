@@ -69,4 +69,3 @@ LEFT JOIN
     rooms r ON ac.current_room_id = r.id
 ORDER BY
     ac.last_seen DESC;
-

@@ -3,25 +3,28 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
+	appLogger "github.com/DCCXXV/twoplayers/backend/internal/logger"
 	"github.com/DCCXXV/twoplayers/backend/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type HTTPHandler struct {
-	roomService      service.RoomService
-	playerService    service.PlayerService
+	roomService       service.RoomService
+	playerService     service.PlayerService
 	connectionService service.ConnectionService
+	logger            *slog.Logger
 }
 
 func NewHTTPHandler(rs service.RoomService, ps service.PlayerService, cs service.ConnectionService) *HTTPHandler {
 	return &HTTPHandler{
-		roomService:      rs,
-		playerService:    ps,
+		roomService:       rs,
+		playerService:     ps,
 		connectionService: cs,
+		logger:            appLogger.Get(),
 	}
 }
 
@@ -37,7 +40,7 @@ func (h *HTTPHandler) CreateRoom(c *gin.Context) {
 	var req CreateRoomRequest
 
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-		log.Printf("WARN: Bad request to create room: %v", err)
+		h.logger.Warn("Bad request to create room", "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
 		return
 	}
@@ -48,14 +51,13 @@ func (h *HTTPHandler) CreateRoom(c *gin.Context) {
 		return
 	}
 
-	// Create active connection for the host
 	_, err := h.connectionService.CreateConnection(ctx, service.CreateConnectionParams{DisplayName: displayName})
 	if err != nil {
 		if err == service.ErrDisplayNameTaken {
 			c.JSON(http.StatusConflict, gin.H{"error": "Display name already taken"})
 			return
 		}
-		log.Printf("ERROR: Failed to create active connection for host %s: %v", displayName, err)
+		h.logger.Error("Failed to create active connection for host", "display_name", displayName, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to establish host connection"})
 		return
 	}
@@ -72,16 +74,15 @@ func (h *HTTPHandler) CreateRoom(c *gin.Context) {
 
 	createdRoom, err := h.roomService.CreateRoom(ctx, serviceParams)
 	if err != nil {
-		log.Printf("ERROR: Failed to create room via service: %v", err)
-		// Rollback connection
+		h.logger.Error("Failed to create room via service", "error", err)
 		if delConnErr := h.connectionService.DeleteConnection(ctx, displayName); delConnErr != nil {
-			log.Printf("ERROR: Failed to rollback connection for %s: %v", displayName, delConnErr)
+			h.logger.Error("Failed to rollback connection", "display_name", displayName, "error", delConnErr)
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create room"})
 		return
 	}
 
-	log.Printf("INFO: Room created successfully: RoomID=%s", createdRoom.ID)
+	h.logger.Info("Room created successfully", "room_id", createdRoom.ID, "host", displayName)
 	c.JSON(http.StatusCreated, createdRoom)
 }
 
@@ -91,18 +92,17 @@ func (h *HTTPHandler) GetRoom(c *gin.Context) {
 
 	roomID, err := uuid.Parse(roomIDStr)
 	if err != nil {
-		log.Printf("WARN: Invalid room ID format in URL: %s, error: %v", roomIDStr, err)
+		h.logger.Warn("Invalid room ID format in URL", "room_id", roomIDStr, "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID format"})
 		return
 	}
 
 	room, err := h.roomService.GetRoomByID(ctx, roomID)
 	if err != nil {
-		if err == service.ErrRoomNotFound { // Check for specific error
-			log.Printf("INFO: Room not found: %s", roomIDStr)
+		if err == service.ErrRoomNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Room not found"})
 		} else {
-			log.Printf("ERROR: Failed to get room %s: %v", roomIDStr, err)
+			h.logger.Error("Failed to get room", "room_id", roomIDStr, "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve room"})
 		}
 		return
@@ -117,19 +117,19 @@ func (h *HTTPHandler) DeleteRoom(c *gin.Context) {
 
 	roomID, err := uuid.Parse(roomIDStr)
 	if err != nil {
-		log.Printf("WARN: Invalid room ID format in URL for delete: %s, error: %v", roomIDStr, err)
+		h.logger.Warn("Invalid room ID format in URL for delete", "room_id", roomIDStr, "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID format"})
 		return
 	}
 
 	err = h.roomService.DeleteRoom(ctx, roomID)
 	if err != nil {
-		log.Printf("ERROR: Failed to delete room %s: %v", roomIDStr, err)
+		h.logger.Error("Failed to delete room", "room_id", roomIDStr, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete room"})
 		return
 	}
 
-	log.Printf("INFO: Room deleted successfully (or did not exist): ID=%s", roomIDStr)
+	h.logger.Info("Room deleted successfully", "room_id", roomIDStr)
 	c.Status(http.StatusNoContent)
 }
 
@@ -160,7 +160,9 @@ func (h *HTTPHandler) ListPublicRooms(c *gin.Context) {
 	type RoomPreview struct {
 		ID          string  `json:"id"`
 		Name        string  `json:"name"`
+		GameType    string  `json:"game_type"`
 		IsPrivate   bool    `json:"is_private"`
+		CreatedAt   string  `json:"created_at"`
 		CreatedBy   *string `json:"created_by"`
 		OtherPlayer *string `json:"other_player"`
 	}
@@ -178,7 +180,9 @@ func (h *HTTPHandler) ListPublicRooms(c *gin.Context) {
 		previews = append(previews, RoomPreview{
 			ID:          r.ID.String(),
 			Name:        r.Name,
+			GameType:    r.GameType,
 			IsPrivate:   r.IsPrivate,
+			CreatedAt:   r.CreatedAt.Time.Format("2006-01-02T15:04:05Z07:00"),
 			CreatedBy:   createdBy,
 			OtherPlayer: otherPlayer,
 		})

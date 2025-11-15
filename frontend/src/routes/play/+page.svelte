@@ -1,59 +1,108 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		connectWebSocket,
-		displayName,
-		isConnected,
-		socket as socketStore
-	} from '$lib/socketStore';
-	import ActiveConnectionsSidebar from '$lib/components/ui/sideelements/ActiveConnectionsSidebar.svelte';
-	import GameCard from '$lib/components/ui/cards/GameCard.svelte';
-	export let data;
+	import GameCard from '$lib/components/ui/GameCard.svelte';
+	import Collapsible from '$lib/components/ui/Collapsible.svelte';
+	import RoomCard from '$lib/components/ui/RoomCard.svelte';
 
-	let connections = data.connections || [];
+	interface Room {
+		id: string;
+		name: string;
+		game_type: string;
+		is_private: boolean;
+		created_by?: string | null;
+		other_player?: string | null;
+		created_at?: string;
+	}
+
+	let allRooms = $state<Room[]>([]);
+	let isLoadingRooms = $state(true);
+	let errorLoadingRooms = $state<string | null>(null);
+
+	const gameTypes = ['tic-tac-toe', 'domineering', 'dots-and-boxes'];
+
+	async function loadAllRooms() {
+		isLoadingRooms = true;
+		errorLoadingRooms = null;
+
+		try {
+			// Fetch rooms from all game types in parallel
+			const responses = await Promise.all(
+				gameTypes.map((gameType) =>
+					fetch(import.meta.env.VITE_SOCKET_URL + `/api/v1/rooms?game_type=${gameType}`)
+				)
+			);
+
+			// Check if all responses are ok
+			const failedResponse = responses.find((r) => !r.ok);
+			if (failedResponse) {
+				throw new Error(`HTTP error! status: ${failedResponse.status}`);
+			}
+
+			// Parse all JSON responses
+			const roomsData = await Promise.all(responses.map((r) => r.json()));
+
+			// Flatten and combine all rooms
+			const combinedRooms: Room[] = roomsData.flat().map((room: any) => ({
+				id: room.id,
+				name: room.name,
+				game_type: room.game_type,
+				is_private: !!room.is_private,
+				created_by: room.created_by,
+				other_player: room.other_player,
+				created_at: room.created_at
+			}));
+
+			// Sort by created_at (oldest first) so people waiting get priority
+			allRooms = combinedRooms.sort((a, b) => {
+				if (!a.created_at || !b.created_at) return 0;
+				return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+			});
+		} catch (error) {
+			console.error('Error loading rooms:', error);
+			errorLoadingRooms = error instanceof Error ? error.message : 'Failed to load rooms';
+			allRooms = [];
+		} finally {
+			isLoadingRooms = false;
+		}
+	}
 
 	onMount(() => {
-		if (!$socketStore) {
-			connectWebSocket();
-		}
-
-		const unsubscribe = socketStore.subscribe((socket) => {
-			if (socket) {
-				socket.addEventListener('message', (event) => {
-					const message = JSON.parse(event.data);
-					if (message.type === 'connections_update') {
-						connections = message.payload;
-					}
-				});
-			}
-		});
-
-		return () => {
-			unsubscribe();
-		};
+		loadAllRooms();
+		// Refresh room list every 20 seconds
+		const interval = setInterval(loadAllRooms, 20000);
+		return () => clearInterval(interval);
 	});
 </script>
 
-<section class="grid w-full grid-cols-1 gap-6 lg:grid-cols-2">
-	<GameCard
-		title="Tic Tac Toe"
-		path="tic-tac-toe"
-		src="/images/games/tic-tac-toe.png"
-		desc="On an initially empty 3×3 grid, players alternate placing their mark, X or O, in any vacant square. Turns alternate until a mark completes a row, column or diagonal of three, or the grid is full; the player who first completes such a line wins, and if the grid fills with no line the game is a draw."
-		tags={['3×3 grid', 'Alignment/Impartial', 'Yes', 'Draw (perfect play)']}
-	/>
-	<GameCard
-		title="Domineering"
-		path="domineering"
-		src="https://dummyimage.com/480x480/1F1919/5B8139&text=Coming%20Soon!"
-		desc="On an initially empty rectangular grid (typically 8x8), players alternate laying a 1×2 domino—one vertically, the other horizontally—on any pair of adjacent empty squares. Turns alternate until a player has no legal placement. The last player to move wins, and draws are impossible."
-		tags={['Rectangular grid', 'Partisan', 'Yes', 'Last player wins (perfect play)']}
-	/>
-	<GameCard
-		title="Dots and Boxes"
-		path="dots-and-boxes"
-		src="https://dummyimage.com/480x480/1F1919/5B8139&text=Coming%20Soon!"
-		desc="On a grid of dots, players take turns drawing a single horizontal or vertical line between two adjacent dots. Turns alternate until all possible lines have been drawn. When a player draws the fourth side of a 1x1 box, they claim that box and immediately take an extra turn. The player who has claimed more boxes wins, and if they claim an equal number, the game is a draw."
-		tags={['Dot grid', 'Impartial', 'No', 'Highest score (draws possible)']}
-	/>
+<section class="my-8">
+	<Collapsible title="Available games">
+		<GameCard title="Tic Tac Toe" path="tic-tac-toe" />
+		<GameCard title="Domineering" path="domineering" />
+		<GameCard title="Dots and Boxes" path="dots-and-boxes" />
+	</Collapsible>
+</section>
+
+<section class="my-8">
+	<Collapsible title="Current rooms">
+		{#if isLoadingRooms}
+			<div class="w-full p-8 text-center">
+				<p class="text-stone-400"></p>
+			</div>
+		{:else if errorLoadingRooms}
+			<div class="w-full p-8 text-center">
+				<p class="text-error-500">Error: {errorLoadingRooms}</p>
+				<button type="button" class="btn preset-outline mt-4" onclick={loadAllRooms}
+					>Try again</button
+				>
+			</div>
+		{:else if allRooms.length > 0}
+			{#each allRooms as room (room.id)}
+				<RoomCard {room} />
+			{/each}
+		{:else}
+			<div class="w-full p-8 text-center">
+				<p class="text-stone-400">No public rooms available. Create one from a game page!</p>
+			</div>
+		{/if}
+	</Collapsible>
 </section>

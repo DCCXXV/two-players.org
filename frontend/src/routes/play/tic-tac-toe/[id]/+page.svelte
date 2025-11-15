@@ -5,21 +5,20 @@
 		sendWebSocketMessage,
 		players,
 		gameState,
-		roomClosedMessage,
-		chatMessages
+		roomClosedMessage
 	} from '$lib/socketStore';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import RematchButton from '$lib/components/ui/buttons/RematchButton.svelte';
+	import RematchButton from '$lib/components/ui/RematchButton.svelte';
 	import Board from '$lib/components/tictactoe/Board.svelte';
 	import GameStatus from '$lib/components/tictactoe/GameStatus.svelte';
+	import Collapsible from '$lib/components/ui/Collapsible.svelte';
 
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 
 	let hasJoined = false;
-	let chatInput = '';
 
 	let moveSoundX: HTMLAudioElement;
 	let moveSoundO: HTMLAudioElement;
@@ -68,9 +67,9 @@
 	}
 
 	$: if ($roomClosedMessage) {
-		alert($roomClosedMessage); // Show an alert when the room is closed
-		$roomClosedMessage = null; // Reset the message
-		goto('/play/tic-tac-toe'); // Redirect to the lobby
+		alert($roomClosedMessage);
+		$roomClosedMessage = null;
+		goto('/play/tic-tac-toe');
 	}
 
 	$: if ($isConnected && $displayName && !hasJoined && data.room) {
@@ -97,94 +96,68 @@
 	function handleRematch() {
 		sendWebSocketMessage({ type: 'rematch_request' });
 	}
-
-	function handleSendMessage() {
-		if (chatInput.trim() === '') return;
-		sendWebSocketMessage({
-			type: 'chat_message',
-			payload: {
-				message: chatInput
-			}
-		});
-		chatInput = '';
-	}
 </script>
 
 {#if data.error}
 	<div class="text-center">
-		<h1 class="h3 lora-700 text-error-400 mb-8">Room Not Found</h1>
-		<!-- <p class="text-surface-400 mb-4">{data.error}</p> -->
-		<a href="/play/tic-tac-toe" class="btn bg-primary-400">Go to Lobby</a>
+		<h1 class="text-error-400 mb-8 text-3xl">Room Not Found</h1>
+		<a href="/play/tic-tac-toe" class="bg-lime-400">Go to Lobby</a>
 	</div>
 {:else if $gameState}
-	<h1 class="h3 lora-700 text-primary-400 mb-4">{data.room.name}</h1>
-	<!--
-	<p class="text-surface-500 mb-4">
-		ID: {data.room.id} · Status: {$gameState.canStart
-			? 'Ready to start!'
-			: 'Waiting for players...'}
-		({$gameState.playerCount}/{$gameState.maxPlayers} players)
-	</p>
-	-->
+	<h1 class="mb-4 text-3xl text-lime-400">{data.room.name}</h1>
 	<div class="flex flex-col justify-between gap-4 md:flex-row">
 		<div class="w-full md:w-1/5">
-			<div>
+			<Collapsible title="Players">
 				{#if $gameState?.players?.length > 0}
-					<div class="border-surface-400 mb-4 border-2">
-						<div class="flex">
-							<div
-								class="text-primary-400 bg-surface-900 border-surface-400 w-10 border-e-2 border-b-2 p-2 text-center font-bold"
-							>
+					<div class="w-full border-b-1 border-stone-700 bg-stone-950">
+						<div class="flex border-b-1 border-stone-700">
+							<div class="w-10 bg-stone-900 p-2 text-center font-bold text-lime-400">
 								<span>X</span>
 							</div>
-							<div
-								class="text-primary-400 bg-surface-800 border-surface-400 w-full border-b-2 p-2 font-bold"
-							>
-								<span class="text-surface-200">{$gameState.players[0] || 'Waiting...'}</span>
+							<div class="w-full bg-stone-950 p-2">
+								<span class="text-stone-200">{$gameState.players[0] || 'Waiting...'}</span>
 							</div>
 						</div>
 						<div class="flex">
-							<div
-								class="text-secondary-400 bg-surface-900 border-surface-400 w-10 border-e-2 p-2 text-center font-bold"
-							>
+							<div class="w-10 bg-stone-900 p-2 text-center font-bold text-rose-400">
 								<span>O</span>
 							</div>
-							<div class="text-primary-400 bg-surface-800 border-surface-400 w-full p-2 font-bold">
-								<span class="text-surface-200">{$gameState.players[1] || 'Waiting...'}</span>
+							<div class="w-full bg-stone-950 p-2">
+								<span class="text-stone-200">{$gameState.players[1] || 'Waiting...'}</span>
 							</div>
 						</div>
 					</div>
-					{#if $gameState.spectatorCount > 0}
-						<details class="bg-surface-800 border-surface-400 mb-4 border-2 p-2">
-							<summary class="text-surface-200 cursor-pointer font-bold">
-								Spectators ({$gameState.spectatorCount})
-							</summary>
+					{#if $gameState.game.winner != ''}
+						<div class="mt-4 w-full">
+							<RematchButton
+								rematchCount={$gameState.rematchCount}
+								maxPlayers={$gameState.maxPlayers}
+								onClick={handleRematch}
+							/>
+						</div>
+					{/if}
+				{:else}
+					<div class="w-full p-4 text-center">
+						<p class="text-stone-400">No players yet...</p>
+					</div>
+				{/if}
+			</Collapsible>
 
-							<ul class=" text-surface-200 p-1 text-sm">
+			{#if $gameState?.spectatorCount > 0}
+				<div class="mt-4">
+					<Collapsible
+						title={`${$gameState.spectatorCount} Spectator${$gameState.spectatorCount == 1 ? '' : 's'}`}
+					>
+						<div class="w-full border-b-1 border-stone-700 bg-stone-950 p-1">
+							<ul class="text-sm text-stone-200">
 								{#each $gameState.spectators as spectator}
-									<li class="py-1">👁️ {spectator}</li>
+									<li class="py-1">{spectator}</li>
 								{/each}
 							</ul>
-						</details>
-					{/if}
-					{#if $gameState.game.winner != ''}
-						<RematchButton
-							rematchCount={$gameState.rematchCount}
-							maxPlayers={$gameState.maxPlayers}
-							onClick={handleRematch}
-						/>
-					{/if}
-					<!-- Debug info temporal
-					<details class="mt-4">
-						<summary class="text-surface-400 cursor-pointer text-sm">Debug Info</summary>
-						<pre class="bg-surface-900 mt-2 overflow-auto rounded p-2 text-xs">
-         					{JSON.stringify($gameState, null, 2)}
-                        </pre>
-					</details>-->
-				{:else}
-					<p class="text-surface-400">No players yet...</p>
-				{/if}
-			</div>
+						</div>
+					</Collapsible>
+				</div>
+			{/if}
 		</div>
 		<div class="w-full md:w-3/5">
 			{#if $gameState.players.length == 2}
@@ -200,36 +173,15 @@
 				<GameStatus gameState={$gameState} {myTurn}></GameStatus>
 			</div>
 		</div>
-		<div
-			class="bg-surface-900 border-surface-400 mb-4 flex w-full flex-col justify-end border-2 md:w-1/5"
-		>
-			<div class="text-surface-100 flex-grow p-4">
-				{#each $chatMessages as msg}
-					<p>
-						<span class="text-primary-400">{msg.displayName}:</span>
-						{msg.message}
-					</p>
-				{/each}
-			</div>
-			<div class="flex gap-2 p-2">
-				<input
-					bind:value={chatInput}
-					placeholder="Type your message..."
-					class="bg-surface-800 border-surface-500 focus:ring-primary-400 w-full border-0 p-2 focus:ring-2"
-					on:keydown={(e) => e.key === 'Enter' && handleSendMessage()}
-				/>
-				<button class="bg-primary-400 text-surface-50 p-2" on:click={handleSendMessage}>Send</button
-				>
-			</div>
-		</div>
+		<div class="w-full md:w-1/5"></div>
 	</div>
 {:else}
 	<div class="text-center">
-		<h1 class="h3 lora-700 text-warning-400">Loading Room...</h1>
-		<p class="text-surface-400 mb-4">Connecting to the room, please wait.</p>
-		<p class="text-surface-500 text-sm">
+		<h1 class="lora-700 text-warning-400 text-3xl">Loading Room...</h1>
+		<p class="mb-4 text-stone-400">Connecting to the room, please wait.</p>
+		<p class="text-sm text-stone-500">
 			If this is taking too long, you can
-			<a href="/play/tic-tac-toe" class="text-primary-400 hover:underline">return to lobby</a>.
+			<a href="/play/tic-tac-toe" class="text-lime-400 hover:underline">return to lobby</a>.
 		</p>
 	</div>
 {/if}

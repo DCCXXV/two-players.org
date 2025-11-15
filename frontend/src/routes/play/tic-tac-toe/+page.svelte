@@ -112,52 +112,51 @@
 	<li><a class="opacity-60 hover:underline" href="/play">Play</a></li>
 	<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
 	<li>
-		<a class="text-primary-400 hover:underline" href="/play/tic-tac-toe">Tic-Tac-Toe</a>
+		<a class="text-lime-400 hover:underline" href="/play/tic-tac-toe">Tic-Tac-Toe</a>
 	</li>
 </ol>
-<h3 class="h3 lora-700 text-surface-200 my-4">Create a room</h3>
 {#if $displayName}
 	<CreateRoomForm onRoomCreate={handleRoomCreation} displayName={$displayName} />
 {:else}
-	<div class="border-surface-500 flex w-full items-center justify-center border-2 p-4 md:max-w-120">
-		<p class="text-surface-400">Initializing...</p>
+	<div class="flex w-full items-center justify-center border-2 border-stone-500 p-4 md:max-w-120">
+		<p class="text-stone-400">Initializing...</p>
 	</div>
 {/if}
-<h3 class="h3 lora-700 text-surface-200 my-4">Available rooms</h3>
+<h3 class="my-4 text-2xl text-stone-400">Available rooms</h3>
 
 {#if isLoadingRooms}
-	<p class="text-surface-400">Loading rooms...</p>
+	<p class="text-stone-400">Loading rooms...</p>
 {:else if errorLoadingRooms}
 	<p class="text-error-500">Error: {errorLoadingRooms}</p>
-	<button type="button" class="btn preset-outline-primary" onclick={loadRooms}>Try again</button>
+	<button type="button" class="btn preset-outline-lime" onclick={loadRooms}>Try again</button>
 {:else if availableRooms.length > 0}
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
 		{#each availableRooms as room (room.id)}
 			<a href={`/play/tic-tac-toe/${room.id}`} class="group">
 				<div
-					class="bg-surface-900 group-hover:bg-surface-800 flex flex-col gap-2 p-4 shadow transition-colors sm:aspect-square"
+					class="flex flex-col gap-2 bg-stone-900 p-4 shadow transition-colors group-hover:bg-stone-800 sm:aspect-square"
 				>
-					<h4 class="text-primary-400 lora-700 text-lg text-pretty">{room.Name}</h4>
-					<div class="text-surface-300 space-y-1 text-sm">
+					<h4 class="lora-700 text-lg text-pretty text-lime-400">{room.Name}</h4>
+					<div class="space-y-1 text-sm text-stone-300">
 						<div>Player 1: <span class="font-bold">{room.CreatedBy}</span></div>
 						<div>
 							Player 2:
 							{#if room.OtherPlayer}
 								<span class="font-bold">{room.OtherPlayer}</span>
 							{:else}
-								<span class="text-surface-500 italic">Join to play!</span>
+								<span class="text-stone-500 italic">Join to play!</span>
 							{/if}
 						</div>
 					</div>
 					<div class="mt-auto">
-						<div class="text-surface-400 text-xs">Click to join →</div>
+						<div class="text-xs text-stone-400">Click to join →</div>
 					</div>
 				</div>
 			</a>
 		{/each}
 	</div>
 {:else}
-	<p class="text-surface-400">No public rooms available. Create one!</p>
+	<p class="text-stone-400">No public rooms available. Create one!</p>
 {/if}
 {#if isCreatingRoom}
 	<div class="fixed inset-0 z-10 flex items-center justify-center bg-black/50 opacity-80">

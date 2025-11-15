@@ -3,14 +3,12 @@ package realtime
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
-// Client represents a single user connected via WebSocket.
 type Client struct {
 	conn        *websocket.Conn
 	manager     *Manager
@@ -18,15 +16,12 @@ type Client struct {
 	displayName string
 	currentRoom *Room
 	send        chan []byte
-
-	// State in the current room
-	role     string // "player_0", "player_1", "spectator"
-	joinedAt time.Time
+	role        string
+	joinedAt    time.Time
 }
 
 func (c *Client) readPump() {
 	defer func() {
-		log.Printf("Realtime: Closing readPump for client %s (%s)", c.id, c.displayName)
 		c.manager.unregisterClient(c)
 		c.conn.Close()
 	}()
@@ -38,7 +33,7 @@ func (c *Client) readPump() {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("ERROR: WebSocket read error for client %s: %v", c.id, err)
+				c.manager.logger.Error("WebSocket unexpected close", "client_id", c.id, "display_name", c.displayName, "error", err)
 			}
 			break
 		}
@@ -53,7 +48,6 @@ func (c *Client) readPump() {
 		case "join_room":
 			c.manager.handleJoinRoom(c, msg.Payload)
 		case "make_move":
-			// Handle game moves
 			if c.currentRoom != nil {
 				c.handleGameMove(msg.Payload)
 			} else {
@@ -71,6 +65,8 @@ func (c *Client) readPump() {
 			} else {
 				c.sendError("Not in a room.")
 			}
+		case "update_display_name":
+			c.manager.handleUpdateDisplayName(c, msg.Payload)
 		default:
 			c.sendError(fmt.Sprintf("Unknown message type '%s'.", msg.Type))
 		}
@@ -88,14 +84,12 @@ func (c *Client) writePump() {
 		case message, ok := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// The manager closed the channel.
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			// Send each message in its own frame to prevent JSON concatenation.
 			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
-				log.Printf("ERROR: Failed to write message for client %s: %v", c.id, err)
+				c.manager.logger.Error("Failed to write message", "client_id", c.id, "error", err)
 				return
 			}
 		case <-ticker.C:
@@ -114,13 +108,13 @@ func (c *Client) sendConnectionReady() {
 func (c *Client) sendMessage(msgType string, payload any) {
 	jsonData, err := createWebSocketMessage(msgType, payload)
 	if err != nil {
-		log.Printf("ERROR: Failed to marshal message '%s' for client %s: %v", msgType, c.id, err)
+		c.manager.logger.Error("Failed to marshal message", "type", msgType, "client_id", c.id, "error", err)
 		return
 	}
 	select {
 	case c.send <- jsonData:
 	default:
-		log.Printf("⚠️  sendMessage: Client %s's send channel is full. Dropping message of type '%s'.", c.displayName, msgType)
+		c.manager.logger.Warn("Client send channel full, dropping message", "display_name", c.displayName, "message_type", msgType)
 	}
 }
 
