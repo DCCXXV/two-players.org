@@ -44,6 +44,33 @@ func (q *Queries) CreatePlayer(ctx context.Context, arg CreatePlayerParams) (Pla
 	return i, err
 }
 
+const deletePlayerByRoomAndName = `-- name: DeletePlayerByRoomAndName :exec
+DELETE FROM players
+WHERE room_id = $1 AND player_display_name = $2
+`
+
+type DeletePlayerByRoomAndNameParams struct {
+	RoomID            pgtype.UUID `json:"room_id"`
+	PlayerDisplayName string      `json:"player_display_name"`
+}
+
+// Removes a player from a room by their display name.
+func (q *Queries) DeletePlayerByRoomAndName(ctx context.Context, arg DeletePlayerByRoomAndNameParams) error {
+	_, err := q.db.Exec(ctx, deletePlayerByRoomAndName, arg.RoomID, arg.PlayerDisplayName)
+	return err
+}
+
+const deletePlayersByRoomID = `-- name: DeletePlayersByRoomID :exec
+DELETE FROM players
+WHERE room_id = $1
+`
+
+// Removes all players from a room.
+func (q *Queries) DeletePlayersByRoomID(ctx context.Context, roomID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deletePlayersByRoomID, roomID)
+	return err
+}
+
 const getPlayersByRoomID = `-- name: GetPlayersByRoomID :many
 SELECT id, room_id, player_display_name, player_order, joined_at FROM players
 WHERE room_id = $1

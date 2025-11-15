@@ -32,7 +32,6 @@ type CreateRoomParams struct {
 	IsPrivate       bool   `json:"is_private"`
 }
 
-// Create a new game room and return the created room record.
 func (q *Queries) CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, error) {
 	row := q.db.QueryRow(ctx, createRoom,
 		arg.Name,
@@ -59,8 +58,6 @@ DELETE FROM rooms
 WHERE id = $1
 `
 
-// Delete a room by its ID.
-// Note: ON DELETE CASCADE on players table will handle removing associated players.
 func (q *Queries) DeleteRoom(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteRoom, id)
 	return err
@@ -72,7 +69,6 @@ WHERE id = $1
 LIMIT 1
 `
 
-// Retrieve a specific room by its unique ID.
 func (q *Queries) GetRoomByID(ctx context.Context, id pgtype.UUID) (Room, error) {
 	row := q.db.QueryRow(ctx, getRoomByID, id)
 	var i Room
@@ -94,8 +90,6 @@ WHERE is_private = FALSE
 ORDER BY created_at DESC
 `
 
-// Retrieve all rooms that are not private, ordered by creation time descending.
-// Useful for a public lobby list.
 func (q *Queries) ListPublicRooms(ctx context.Context) ([]Room, error) {
 	rows, err := q.db.Query(ctx, listPublicRooms)
 	if err != nil {
@@ -157,7 +151,6 @@ type ListPublicRoomsWithPlayersRow struct {
 	OtherPlayer pgtype.Text        `json:"other_player"`
 }
 
-// Retrieve all rooms that are not private with player info, ordered by creation time descending.
 func (q *Queries) ListPublicRoomsWithPlayers(ctx context.Context, arg ListPublicRoomsWithPlayersParams) ([]ListPublicRoomsWithPlayersRow, error) {
 	rows, err := q.db.Query(ctx, listPublicRoomsWithPlayers, arg.GameType, arg.Limit, arg.Offset)
 	if err != nil {
@@ -192,7 +185,6 @@ WHERE game_type = $1 AND is_private = FALSE
 ORDER BY created_at DESC
 `
 
-// Retrieve all public rooms for a specific game type.
 func (q *Queries) ListRoomsByGameType(ctx context.Context, gameType string) ([]Room, error) {
 	rows, err := q.db.Query(ctx, listRoomsByGameType, gameType)
 	if err != nil {

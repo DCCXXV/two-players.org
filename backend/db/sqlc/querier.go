@@ -18,13 +18,14 @@ type Querier interface {
 	// with a designated player_order (0 or 1).
 	// Assumes the player_display_name already exists in the active_connections table.
 	CreatePlayer(ctx context.Context, arg CreatePlayerParams) (Player, error)
-	// Create a new game room and return the created room record.
 	CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, error)
 	// Removes an active connection record (e.g., on disconnect).
 	// ON DELETE CASCADE on players table will remove associated player records.
 	DeleteActiveConnection(ctx context.Context, displayName string) error
-	// Delete a room by its ID.
-	// Note: ON DELETE CASCADE on players table will handle removing associated players.
+	// Removes a player from a room by their display name.
+	DeletePlayerByRoomAndName(ctx context.Context, arg DeletePlayerByRoomAndNameParams) error
+	// Removes all players from a room.
+	DeletePlayersByRoomID(ctx context.Context, roomID pgtype.UUID) error
 	DeleteRoom(ctx context.Context, id pgtype.UUID) error
 	// Finds connections that haven't been seen recently (for cleanup).
 	FindStaleConnections(ctx context.Context, lastSeen pgtype.Timestamptz) ([]string, error)
@@ -32,19 +33,14 @@ type Querier interface {
 	GetActiveConnection(ctx context.Context, displayName string) (ActiveConnection, error)
 	// Retrieves all players associated with a specific room, ordered by their turn.
 	GetPlayersByRoomID(ctx context.Context, roomID pgtype.UUID) ([]Player, error)
-	// Retrieve a specific room by its unique ID.
 	GetRoomByID(ctx context.Context, id pgtype.UUID) (Room, error)
 	// $1 would be a timestamp like NOW() - INTERVAL '5 minutes'
 	// Lists all active connections with their status and game type.
 	ListActiveConnections(ctx context.Context) ([]ListActiveConnectionsRow, error)
 	// Lists users currently in the lobby state.
 	ListActiveLobbyUsers(ctx context.Context) ([]string, error)
-	// Retrieve all rooms that are not private, ordered by creation time descending.
-	// Useful for a public lobby list.
 	ListPublicRooms(ctx context.Context) ([]Room, error)
-	// Retrieve all rooms that are not private with player info, ordered by creation time descending.
 	ListPublicRoomsWithPlayers(ctx context.Context, arg ListPublicRoomsWithPlayersParams) ([]ListPublicRoomsWithPlayersRow, error)
-	// Retrieve all public rooms for a specific game type.
 	ListRoomsByGameType(ctx context.Context, gameType string) ([]Room, error)
 	UpdateActiveConnectionName(ctx context.Context, arg UpdateActiveConnectionNameParams) (int64, error)
 	// Updates the last_seen timestamp for a connection (heartbeat).

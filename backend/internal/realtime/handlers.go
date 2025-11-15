@@ -25,9 +25,29 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 		return
 	}
 
+	// If client is already in a different room, leave it first
 	if client.currentRoom != nil && client.currentRoom.ID != roomID {
-		client.sendError("You are already in another room.")
-		return
+		oldRoom := client.currentRoom
+		oldGameType := oldRoom.GameType
+		shouldDeleteRoom := oldRoom.removeClient(client)
+
+		// Check if old room should be deleted from memory and database
+		m.mu.Lock()
+		if shouldDeleteRoom || len(oldRoom.Clients) == 0 {
+			delete(m.rooms, oldRoom.ID)
+
+			// Delete room from database
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			err := m.roomService.DeleteRoom(ctx, oldRoom.ID)
+			if err != nil {
+				m.logger.Error("Failed to delete room from DB", "room_id", oldRoom.ID, "error", err)
+			}
+
+			// Broadcast room list update
+			go m.broadcastRoomListUpdate(oldGameType)
+		}
+		m.mu.Unlock()
 	}
 
 	m.mu.Lock()
@@ -63,6 +83,9 @@ func (m *Manager) handleJoinRoom(client *Client, payload json.RawMessage) {
 	m.mu.Unlock()
 
 	room.addClient(client)
+
+	// Broadcast room list update to all clients
+	go m.broadcastRoomListUpdate(room.GameType)
 }
 
 func (c *Client) handleGameMove(payload json.RawMessage) {
@@ -186,4 +209,41 @@ func (m *Manager) handleUpdateDisplayName(client *Client, payload json.RawMessag
 
 	m.logger.Info("Display name updated", "old_name", oldName, "new_name", newName, "client_id", client.id)
 	client.sendMessage("connection_ready", map[string]string{"displayName": newName})
+}
+
+func (m *Manager) handleLeaveRoom(client *Client) {
+	if client.currentRoom == nil {
+		client.sendError("You are not in a room.")
+		return
+	}
+
+	room := client.currentRoom
+	gameType := room.GameType
+	roomID := room.ID
+
+	shouldDeleteRoom := room.removeClient(client)
+
+	// Check if room should be deleted from memory and database
+	m.mu.Lock()
+	if shouldDeleteRoom || len(room.Clients) == 0 {
+		delete(m.rooms, room.ID)
+
+		// Delete room from database
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := m.roomService.DeleteRoom(ctx, roomID)
+		if err != nil {
+			m.logger.Error("Failed to delete room from DB", "room_id", roomID, "error", err)
+		}
+
+		// Broadcast room list update
+		go m.broadcastRoomListUpdate(gameType)
+	}
+	m.mu.Unlock()
+
+	// Send confirmation to the client who left
+	client.sendMessage("left_room", map[string]string{
+		"message":  "You have left the room.",
+		"gameType": gameType,
+	})
 }

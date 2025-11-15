@@ -16,3 +16,13 @@ RETURNING *;
 SELECT * FROM players
 WHERE room_id = $1
 ORDER BY player_order;
+
+-- name: DeletePlayerByRoomAndName :exec
+-- Removes a player from a room by their display name.
+DELETE FROM players
+WHERE room_id = $1 AND player_display_name = $2;
+
+-- name: DeletePlayersByRoomID :exec
+-- Removes all players from a room.
+DELETE FROM players
+WHERE room_id = $1;

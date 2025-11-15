@@ -9,6 +9,8 @@ import (
 
 type PlayerService interface {
 	CreatePlayer(ctx context.Context, params CreatePlayerParams) (db.Player, error)
+	DeletePlayerByRoomAndName(ctx context.Context, roomID pgtype.UUID, playerDisplayName string) error
+	DeletePlayersByRoomID(ctx context.Context, roomID pgtype.UUID) error
 }
 
 type CreatePlayerParams struct {
@@ -31,4 +33,15 @@ func (s *playerService) CreatePlayer(ctx context.Context, params CreatePlayerPar
 		PlayerDisplayName: params.PlayerDisplayName,
 		PlayerOrder:       params.PlayerOrder,
 	})
+}
+
+func (s *playerService) DeletePlayerByRoomAndName(ctx context.Context, roomID pgtype.UUID, playerDisplayName string) error {
+	return s.queries.DeletePlayerByRoomAndName(ctx, db.DeletePlayerByRoomAndNameParams{
+		RoomID:            roomID,
+		PlayerDisplayName: playerDisplayName,
+	})
+}
+
+func (s *playerService) DeletePlayersByRoomID(ctx context.Context, roomID pgtype.UUID) error {
+	return s.queries.DeletePlayersByRoomID(ctx, roomID)
 }

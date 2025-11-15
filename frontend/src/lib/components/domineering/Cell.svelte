@@ -31,7 +31,7 @@
 	{onmouseenter}
 	{onmouseleave}
 	{disabled}
-	class="aspect-square w-20 border-2 border-stone-700 text-5xl font-bold text-stone-950 transition-colors disabled:cursor-not-allowed
+	class="aspect-square w-14 border-2 border-stone-700 text-5xl font-bold text-stone-950 transition-colors disabled:cursor-not-allowed md:w-20
 	{getCellClass()}
 	{disabled && !value ? 'opacity-50' : ''}"
 >

@@ -150,8 +150,10 @@ func (m *Manager) registerClient(client *Client) {
 
 func (m *Manager) unregisterClient(client *Client) {
 	var roomToDelete *Room
+	var gameTypeToUpdate string
 	if client.currentRoom != nil {
 		room := client.currentRoom
+		gameTypeToUpdate = room.GameType
 		if room.removeClient(client) {
 			roomToDelete = room
 		}
@@ -160,6 +162,19 @@ func (m *Manager) unregisterClient(client *Client) {
 	m.mu.Lock()
 	if roomToDelete != nil {
 		delete(m.rooms, roomToDelete.ID)
+
+		// Delete room from database and broadcast update
+		roomID := roomToDelete.ID
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			err := m.roomService.DeleteRoom(ctx, roomID)
+			if err != nil {
+				m.logger.Error("Failed to delete room from DB on client disconnect", "room_id", roomID, "error", err)
+			}
+			// Broadcast room list update
+			m.broadcastRoomListUpdate(gameTypeToUpdate)
+		}()
 	}
 
 	if _, ok := m.clients[client.id]; ok {
@@ -284,5 +299,40 @@ func (m *Manager) broadcastConnections() {
 
 	for _, client := range m.clients {
 		client.send <- msgBytes
+	}
+}
+
+func (m *Manager) broadcastRoomListUpdate(gameType string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rooms, err := m.roomService.ListPublicRoomsWithPlayers(ctx, gameType, 100, 0)
+	if err != nil {
+		m.logger.Error("Failed to fetch rooms for broadcast", "game_type", gameType, "error", err)
+		return
+	}
+
+	message := map[string]interface{}{
+		"type": "room_list_update",
+		"payload": map[string]interface{}{
+			"game_type": gameType,
+			"rooms":     rooms,
+		},
+	}
+
+	msgBytes, err := json.Marshal(message)
+	if err != nil {
+		m.logger.Error("Failed to marshal room_list_update", "error", err)
+		return
+	}
+
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, client := range m.clients {
+		select {
+		case client.send <- msgBytes:
+		default:
+			m.logger.Warn("Client send channel full during room_list_update broadcast", "display_name", client.displayName)
+		}
 	}
 }

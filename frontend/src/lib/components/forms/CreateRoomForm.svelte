@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { Switch } from '@skeletonlabs/skeleton-svelte';
+	import type { GameConfig } from '$lib/config/games';
 
-	let {
-		onRoomCreate,
-		displayName
-	}: {
-		onRoomCreate: (options: { Name: string; GameType: string; IsPrivate: boolean }) => void;
+	interface Props {
+		gameConfig: GameConfig;
 		displayName: string;
-	} = $props();
+		onRoomCreate: (options: { Name: string; GameType: string; IsPrivate: boolean }) => void;
+	}
+
+	let { gameConfig, displayName, onRoomCreate }: Props = $props();
 
 	let isPrivateRoom = $state(false);
 	let roomNameValue = $state('');
@@ -27,7 +27,7 @@
 		}
 		const roomDetails = {
 			Name: roomNameValue,
-			GameType: 'tic-tac-toe',
+			GameType: gameConfig.id,
 			IsPrivate: isPrivateRoom
 		};
 		onRoomCreate(roomDetails);

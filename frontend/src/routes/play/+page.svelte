@@ -3,6 +3,7 @@
 	import GameCard from '$lib/components/ui/GameCard.svelte';
 	import Collapsible from '$lib/components/ui/Collapsible.svelte';
 	import RoomCard from '$lib/components/ui/RoomCard.svelte';
+	import { roomListUpdates } from '$lib/socketStore';
 
 	interface Room {
 		id: string;
@@ -66,11 +67,27 @@
 		}
 	}
 
+	// Listen for real-time room list updates
+	$effect(() => {
+		if ($roomListUpdates) {
+			// Update the specific game type's rooms in our combined list
+			const gameType = $roomListUpdates.game_type;
+			const updatedRooms = $roomListUpdates.rooms;
+
+			// Remove old rooms of this game type and add new ones
+			allRooms = [...allRooms.filter((r) => r.game_type !== gameType), ...updatedRooms].sort(
+				(a, b) => {
+					if (!a.created_at || !b.created_at) return 0;
+					return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+				}
+			);
+
+			isLoadingRooms = false;
+		}
+	});
+
 	onMount(() => {
 		loadAllRooms();
-		// Refresh room list every 20 seconds
-		const interval = setInterval(loadAllRooms, 20000);
-		return () => clearInterval(interval);
 	});
 </script>
 

@@ -156,22 +156,55 @@ func (r *Room) removeClient(client *Client) bool {
 	}
 
 	isHost := client.displayName == r.HostName
+	leavingPlayerName := client.displayName
+	wasPlayer := client.role == "player_0" || client.role == "player_1"
 
 	delete(r.Clients, client.id)
 	client.currentRoom = nil
 
+	// Delete player from database if they were a player (not spectator)
+	if wasPlayer {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		err := r.manager.playerService.DeletePlayerByRoomAndName(ctx, pgtype.UUID{Bytes: r.ID, Valid: true}, leavingPlayerName)
+		if err != nil {
+			r.manager.logger.Error("Failed to delete player from DB", "display_name", leavingPlayerName, "room_id", r.ID, "error", err)
+		}
+	}
+
 	if isHost {
+		// Host left - notify all remaining clients and close the room
 		for _, otherClient := range r.Clients {
-			otherClient.sendMessage("room_closed", map[string]string{"message": "The host has left the room."})
+			otherClient.sendMessage("room_closed", map[string]string{
+				"message":  "The host has left the room.",
+				"gameType": r.GameType,
+			})
 			otherClient.currentRoom = nil
 		}
 
 		r.Clients = make(map[uuid.UUID]*Client)
+
+		// Delete all remaining players from database
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := r.manager.playerService.DeletePlayersByRoomID(ctx, pgtype.UUID{Bytes: r.ID, Valid: true})
+		if err != nil {
+			r.manager.logger.Error("Failed to delete all players from DB", "room_id", r.ID, "error", err)
+		}
+
 		return true
 
 	} else if len(r.Clients) == 0 {
 		return true
 	} else {
+		// Non-host player left - notify remaining clients
+		for _, otherClient := range r.Clients {
+			otherClient.sendMessage("player_left", map[string]string{
+				"message":    leavingPlayerName + " has left the room.",
+				"playerName": leavingPlayerName,
+			})
+		}
 		go r.broadcastRoomState()
 		return false
 	}

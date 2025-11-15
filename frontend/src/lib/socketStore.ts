@@ -29,6 +29,17 @@ interface JoinSuccessPayload {
 
 interface RoomClosedPayload {
 	message: string;
+	gameType?: string;
+}
+
+interface LeftRoomPayload {
+	message: string;
+	gameType: string;
+}
+
+interface PlayerLeftPayload {
+	message: string;
+	playerName: string;
 }
 
 interface ErrorPayload {
@@ -43,11 +54,19 @@ export interface ChatMessage {
 
 interface ChatMessagePayload extends ChatMessage {}
 
+interface RoomListUpdatePayload {
+	game_type: string;
+	rooms: any[];
+}
+
 export type WebSocketMessage =
 	| { type: 'connection_ready'; payload: ConnectionReadyPayload }
 	| { type: 'game_state_update'; payload: GameStateUpdatePayload }
 	| { type: 'join_success'; payload?: JoinSuccessPayload }
 	| { type: 'room_closed'; payload: RoomClosedPayload }
+	| { type: 'left_room'; payload: LeftRoomPayload }
+	| { type: 'player_left'; payload: PlayerLeftPayload }
+	| { type: 'room_list_update'; payload: RoomListUpdatePayload }
 	| { type: 'error'; payload: ErrorPayload }
 	| { type: 'chat_message'; payload: ChatMessagePayload }
 	| { type: string; payload?: any };
@@ -62,7 +81,10 @@ export const gameState: Writable<GameState | null> = writable(null);
 export const players: Writable<string[]> = writable([]);
 export const errorMessage: Writable<string | null> = writable(null);
 export const roomClosedMessage: Writable<string | null> = writable(null);
+export const leftRoomData: Writable<{ message: string; gameType: string } | null> = writable(null);
+export const playerLeftMessage: Writable<string | null> = writable(null);
 export const chatMessages: Writable<ChatMessage[]> = writable([]);
+export const roomListUpdates: Writable<RoomListUpdatePayload | null> = writable(null);
 
 let socketInstance: WebSocket | null = null;
 let reconnectAttempts = 0;
@@ -151,6 +173,21 @@ export function connectWebSocket(): void {
 					players.set([]);
 					break;
 
+				case 'left_room':
+					console.log('Left room:', message.payload);
+					leftRoomData.set({
+						message: message.payload.message,
+						gameType: message.payload.gameType
+					});
+					gameState.set(null);
+					players.set([]);
+					break;
+
+				case 'player_left':
+					console.log('Player left:', message.payload);
+					playerLeftMessage.set(message.payload.message);
+					break;
+
 				case 'error':
 					console.log('Error received:', message.payload);
 					if (message.payload.message === 'You are already in another room.') {
@@ -167,6 +204,11 @@ export function connectWebSocket(): void {
 				case 'chat_message':
 					console.log('Chat message received:', message.payload);
 					chatMessages.update((messages) => [...messages, message.payload]);
+					break;
+
+				case 'room_list_update':
+					console.log('Room list update received:', message.payload);
+					roomListUpdates.set(message.payload);
 					break;
 
 				default:
@@ -212,5 +254,22 @@ export function updateDisplayName(newName: string): void {
 		}
 	} else {
 		console.error('WebSocket not connected, cannot update display name');
+	}
+}
+
+export function leaveRoom(): void {
+	if (socketInstance && socketInstance.readyState === WebSocket.OPEN) {
+		try {
+			const message = {
+				type: 'leave_room'
+			};
+			const jsonString = JSON.stringify(message);
+			socketInstance.send(jsonString);
+			console.log('Leave room message sent:', jsonString);
+		} catch (e) {
+			console.error('Failed to send leave room message:', e);
+		}
+	} else {
+		console.error('WebSocket not connected, cannot leave room');
 	}
 }

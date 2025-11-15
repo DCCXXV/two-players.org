@@ -67,6 +67,8 @@ func (c *Client) readPump() {
 			}
 		case "update_display_name":
 			c.manager.handleUpdateDisplayName(c, msg.Payload)
+		case "leave_room":
+			c.manager.handleLeaveRoom(c)
 		default:
 			c.sendError(fmt.Sprintf("Unknown message type '%s'.", msg.Type))
 		}
