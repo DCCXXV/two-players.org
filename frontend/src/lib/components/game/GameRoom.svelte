@@ -16,6 +16,7 @@
 	import RematchButton from '$lib/components/ui/RematchButton.svelte';
 	import Collapsible from '$lib/components/ui/Collapsible.svelte';
 	import GameChat from '$lib/components/game/GameChat.svelte';
+	import { Volume2, VolumeX } from 'lucide-svelte';
 	import type { Snippet } from 'svelte';
 
 	interface Room {
@@ -39,13 +40,24 @@
 	let gameOverSound: HTMLAudioElement;
 	let prevTurn = $state<number | undefined>(undefined);
 	let gameHasEnded = $state(false);
+	let isMuted = $state(false);
 
 	// Sound effects logic
 	onMount(() => {
+		const savedMuteState = localStorage.getItem('soundMuted');
+		if (savedMuteState !== null) {
+			isMuted = savedMuteState === 'true';
+		}
+
 		if (moveSoundPlayer1) moveSoundPlayer1.volume = 0.5;
 		if (moveSoundPlayer2) moveSoundPlayer2.volume = 0.5;
 		if (gameOverSound) gameOverSound.volume = 0.4;
 	});
+
+	function toggleMute() {
+		isMuted = !isMuted;
+		localStorage.setItem('soundMuted', String(isMuted));
+	}
 
 	// Initialize prevTurn
 	$effect(() => {
@@ -57,12 +69,14 @@
 	// Handle turn changes and play sounds
 	$effect(() => {
 		if ($gameState && prevTurn !== undefined && $gameState.game.currentTurn !== prevTurn) {
-			if (prevTurn === 0 && moveSoundPlayer1) {
-				moveSoundPlayer1.currentTime = 0;
-				moveSoundPlayer1.play().catch((e) => console.error('Error playing sound 1', e));
-			} else if (prevTurn === 1 && moveSoundPlayer2) {
-				moveSoundPlayer2.currentTime = 0;
-				moveSoundPlayer2.play().catch((e) => console.error('Error playing sound 2', e));
+			if (!isMuted) {
+				if (prevTurn === 0 && moveSoundPlayer1) {
+					moveSoundPlayer1.currentTime = 0;
+					moveSoundPlayer1.play().catch((e) => console.error('Error playing sound 1', e));
+				} else if (prevTurn === 1 && moveSoundPlayer2) {
+					moveSoundPlayer2.currentTime = 0;
+					moveSoundPlayer2.play().catch((e) => console.error('Error playing sound 2', e));
+				}
 			}
 			prevTurn = $gameState.game.currentTurn;
 		}
@@ -71,11 +85,11 @@
 	// Handle game over sound
 	$effect(() => {
 		if ($gameState && $gameState.game.winner && !gameHasEnded) {
-			if (gameOverSound) {
+			if (gameOverSound && !isMuted) {
 				gameOverSound.currentTime = 0;
 				gameOverSound.play().catch((e) => console.error('Error playing game over sound', e));
-				gameHasEnded = true;
 			}
+			gameHasEnded = true;
 		}
 	});
 
@@ -148,8 +162,29 @@
 		<a href={`/play/${gameConfig.path}`} class="bg-lime-400">Go to Lobby</a>
 	</div>
 {:else if $gameState}
+	<ol class="mb-6 flex items-center gap-4">
+		<li><a class="opacity-60 hover:underline" href="/play">Play</a></li>
+		<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
+		<li><a class="opacity-60 hover:underline" href={`/play/${gameConfig.path}`}>{gameConfig.displayName}</a></li>
+		<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
+		<li><span class="text-lime-400">Game room</span></li>
+	</ol>
+
 	<div class="mb-4 flex items-center justify-between">
-		<h1 class="text-3xl text-lime-400">{room.name}</h1>
+		<div class="flex items-center gap-3">
+			<h1 class="text-3xl text-lime-400">{room.name}</h1>
+			<button
+				on:click={toggleMute}
+				class="rounded-0 flex items-center justify-center bg-transparent p-2 text-stone-400 transition-colors hover:bg-stone-700 hover:text-lime-400"
+				aria-label={isMuted ? 'Unmute sounds' : 'Mute sounds'}
+			>
+				{#if isMuted}
+					<VolumeX size={20} />
+				{:else}
+					<Volume2 size={20} />
+				{/if}
+			</button>
+		</div>
 		<button
 			on:click={handleLeaveRoom}
 			class="rounded-0 cursor-pointer border-r-2 border-b-2 border-rose-900 bg-rose-400 px-4 py-2 text-sm font-bold text-rose-950 transition-colors hover:bg-rose-500"
