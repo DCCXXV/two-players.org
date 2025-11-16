@@ -100,9 +100,9 @@
 			{#each games as game}
 				<a
 					href="/play/{game.path}"
-					class="rounded-0 group block border-b-1 border-stone-700 bg-transparent p-4 transition-all hover:border-lime-400"
+					class="rounded-0 group block border-b-1 border-zinc-700 bg-transparent p-4 transition-all hover:border-blue-400"
 				>
-					<h3 class="mb-1 text-lg font-bold text-stone-300 group-hover:text-lime-400">
+					<h3 class="mb-1 text-lg font-bold text-zinc-300 group-hover:text-blue-400">
 						{game.displayName}
 					</h3>
 				</a>
@@ -115,7 +115,7 @@
 	<Collapsible title="Current rooms">
 		{#if isLoadingRooms}
 			<div class="w-full p-8 text-center">
-				<p class="text-stone-400"></p>
+				<p class="text-zinc-400"></p>
 			</div>
 		{:else if errorLoadingRooms}
 			<div class="w-full p-8 text-center">
@@ -132,7 +132,7 @@
 		</div>
 		{:else}
 			<div class="w-full p-8 text-center">
-				<p class="text-stone-400">No public rooms available. Create one from a game page!</p>
+				<p class="text-zinc-400">No public rooms available. Create one from a game page!</p>
 			</div>
 		{/if}
 	</Collapsible>

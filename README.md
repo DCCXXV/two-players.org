@@ -20,7 +20,7 @@ two-players.org is a web platform designed to facilitate playing combinatorial g
 <div align="center">
   
 ![Game lobby](screenshots/tic-tac-toe_lobby.png)
-*Game lobby with player list and rematch options*
+*Tic-Tac-Toe Lobby*
 
 ![Domineering game](screenshots/domineering.png)
 *Playing Domineering - a tile-placement combinatorial game*

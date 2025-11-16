@@ -159,7 +159,7 @@
 {#if error}
 	<div class="text-center">
 		<h1 class="text-error-400 mb-8 text-3xl">Room Not Found</h1>
-		<a href={`/play/${gameConfig.path}`} class="bg-lime-400">Go to Lobby</a>
+		<a href={`/play/${gameConfig.path}`} class="bg-blue-400">Go to Lobby</a>
 	</div>
 {:else if $gameState}
 	<ol class="mb-6 flex items-center gap-4">
@@ -167,15 +167,15 @@
 		<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
 		<li><a class="opacity-60 hover:underline" href={`/play/${gameConfig.path}`}>{gameConfig.displayName}</a></li>
 		<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
-		<li><span class="text-lime-400">Game room</span></li>
+		<li><span class="text-blue-400">Game room</span></li>
 	</ol>
 
 	<div class="mb-4 flex items-center justify-between">
 		<div class="flex items-center gap-3">
-			<h1 class="text-3xl text-lime-400">{room.name}</h1>
+			<h1 class="text-3xl text-blue-400">{room.name}</h1>
 			<button
 				on:click={toggleMute}
-				class="rounded-0 flex items-center justify-center bg-transparent p-2 text-stone-400 transition-colors hover:bg-stone-700 hover:text-lime-400"
+				class="rounded-0 flex items-center justify-center bg-transparent p-2 text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-blue-400"
 				aria-label={isMuted ? 'Unmute sounds' : 'Mute sounds'}
 			>
 				{#if isMuted}
@@ -187,7 +187,7 @@
 		</div>
 		<button
 			on:click={handleLeaveRoom}
-			class="rounded-0 cursor-pointer border-r-2 border-b-2 border-rose-900 bg-rose-400 px-4 py-2 text-sm font-bold text-rose-950 transition-colors hover:bg-rose-500"
+			class="rounded-0 cursor-pointer border-r-2 border-b-2 border-red-900 bg-red-400 px-4 py-2 text-sm font-bold text-red-950 transition-colors hover:bg-red-500"
 		>
 			Leave Room
 		</button>
@@ -197,25 +197,25 @@
 		<div class="w-full md:w-1/4">
 			<Collapsible title="Players">
 				{#if $gameState?.players?.length > 0}
-					<div class="w-full border-b-1 border-stone-700 bg-stone-950">
-						<div class="flex border-b-1 border-stone-700">
+					<div class="w-full border-b-1 border-zinc-700 bg-zinc-900">
+						<div class="flex border-b-1 border-zinc-700">
 							<div
-								class="w-10 border-r-1 border-stone-700 bg-stone-900 p-2 text-center font-bold text-lime-400"
+								class="w-10 border-r-1 border-zinc-700 bg-zinc-900 p-2 text-center font-bold text-blue-400"
 							>
 								<span>{gameConfig.playerSymbols[0]}</span>
 							</div>
-							<div class="w-full bg-stone-950 p-2">
-								<span class="text-stone-200">{$gameState.players[0] || 'Waiting...'}</span>
+							<div class="w-full bg-zinc-900 p-2">
+								<span class="text-zinc-200">{$gameState.players[0] || 'Waiting...'}</span>
 							</div>
 						</div>
 						<div class="flex">
 							<div
-								class="w-10 border-r-1 border-stone-700 bg-stone-900 p-2 text-center font-bold text-rose-400"
+								class="w-10 border-r-1 border-zinc-700 bg-zinc-900 p-2 text-center font-bold text-red-400"
 							>
 								<span>{gameConfig.playerSymbols[1]}</span>
 							</div>
-							<div class="w-full bg-stone-950 p-2">
-								<span class="text-stone-200">{$gameState.players[1] || 'Waiting...'}</span>
+							<div class="w-full bg-zinc-900 p-2">
+								<span class="text-zinc-200">{$gameState.players[1] || 'Waiting...'}</span>
 							</div>
 						</div>
 					</div>
@@ -230,7 +230,7 @@
 					{/if}
 				{:else}
 					<div class="w-full p-4 text-center">
-						<p class="text-stone-400">No players yet...</p>
+						<p class="text-zinc-400">No players yet...</p>
 					</div>
 				{/if}
 			</Collapsible>
@@ -240,8 +240,8 @@
 					<Collapsible
 						title={`${$gameState.spectatorCount} Spectator${$gameState.spectatorCount == 1 ? '' : 's'}`}
 					>
-						<div class="w-full border-b-1 border-stone-700 bg-stone-950 p-1">
-							<ul class="text-sm text-stone-200">
+						<div class="w-full border-b-1 border-zinc-700 bg-zinc-950 p-1">
+							<ul class="text-sm text-zinc-200">
 								{#each $gameState.spectators as spectator}
 									<li class="py-1">{spectator}</li>
 								{/each}
@@ -271,10 +271,10 @@
 {:else}
 	<div class="text-center">
 		<h1 class="lora-700 text-warning-400 text-3xl">Loading Room...</h1>
-		<p class="mb-4 text-stone-400">Connecting to the room, please wait.</p>
-		<p class="text-sm text-stone-500">
+		<p class="mb-4 text-zinc-400">Connecting to the room, please wait.</p>
+		<p class="text-sm text-zinc-500">
 			If this is taking too long, you can
-			<a href={`/play/${gameConfig.path}`} class="text-lime-400 hover:underline">return to lobby</a
+			<a href={`/play/${gameConfig.path}`} class="text-blue-400 hover:underline">return to lobby</a
 			>.
 		</p>
 	</div>

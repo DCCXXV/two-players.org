@@ -37,18 +37,18 @@
 				typeof window !== 'undefined' ? Math.min(window.innerWidth * 0.9, 600) : 600}
 			{@const spacing = Math.min(32, (maxWidth - 40) / sticks)}
 			<div
-				class="absolute bottom-0 h-32 w-2 bg-stone-700"
+				class="absolute bottom-0 h-32 w-2 bg-zinc-700"
 				style="transform: translateX({(i - sticks / 2) * spacing}px);"
 			></div>
 		{/each}
 	</div>
 
-	<div class="text-center text-sm text-stone-400">
-		<p class="text-lg font-bold text-stone-400">{sticks} sticks remaining</p>
+	<div class="text-center text-sm text-zinc-400">
+		<p class="text-lg font-bold text-zinc-400">{sticks} sticks remaining</p>
 	</div>
 
 	<div class="flex flex-col items-center gap-4">
-		<p class="text-lg text-stone-300">How many sticks will you take?</p>
+		<p class="text-lg text-zinc-300">How many sticks will you take?</p>
 
 		<div class="flex gap-3">
 			{#each [1, 2, 3] as count}
@@ -56,8 +56,8 @@
 					type="button"
 					class="rounded-0 h-20 w-20 border-b-2 text-2xl font-bold transition-all {selectedCount ===
 					count
-						? 'border-lime-400 bg-lime-400 text-stone-950'
-						: 'border-stone-600 bg-stone-900 text-stone-600 hover:border-stone-500 hover:bg-stone-800'} {disabled ||
+						? 'border-blue-400 bg-blue-400 text-zinc-950'
+						: 'border-zinc-600 bg-zinc-900 text-zinc-600 hover:border-zinc-500 hover:bg-zinc-800'} {disabled ||
 					count > sticks
 						? 'cursor-not-allowed opacity-30'
 						: 'cursor-pointer'}"
@@ -70,7 +70,7 @@
 		</div>
 
 		<button
-			class="cursor-pointer rounded-none border-b-2 border-lime-900 bg-lime-400 px-12 py-4 text-xl font-bold text-stone-950 transition-all hover:bg-lime-500 disabled:border-stone-800 disabled:bg-stone-950 disabled:text-stone-400"
+			class="cursor-pointer rounded-none border-b-2 border-blue-900 bg-blue-400 px-12 py-4 text-xl font-bold text-zinc-950 transition-all hover:bg-blue-500 disabled:border-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-900 disabled:text-zinc-400"
 			disabled={disabled || selectedCount === 0}
 			onclick={handleTakeSticks}
 		>

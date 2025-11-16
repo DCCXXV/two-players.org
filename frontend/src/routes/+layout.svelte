@@ -79,47 +79,47 @@
 	<meta property="twitter:image" content={data.meta.imageUrl} />
 </svelte:head>
 
-<div class="titillium-web-light grid h-screen w-full grid-rows-[auto_1fr_auto] bg-stone-950">
+<div class="titillium-web-light grid h-screen w-full grid-rows-[auto_1fr_auto]">
 	<header
-		class="xl-landscape:px-16 relative flex min-h-14 flex-wrap justify-between gap-4 bg-linear-to-t from-stone-950 to-stone-900 px-4 py-2 sm:justify-between sm:py-0"
+		class="xl-landscape:px-16 relative flex min-h-12 flex-wrap justify-between gap-4 bg-linear-to-t from-zinc-900 to-zinc-800 px-4 py-2 sm:justify-between sm:py-0"
 	>
 		<div class="flex w-full justify-between sm:w-auto">
 			<a
-				class="lora-700 text-md me-6 pt-2 font-bold text-stone-500 hover:brightness-80 md:text-2xl"
+				class="lora-700 text-md me-6 pt-2 font-bold text-zinc-500 hover:brightness-80 md:text-2xl"
 				href="/"
 			>
-				<span class="text-lime-400">two</span><span class="text-stone-500">-</span><span
-					class="text-rose-400">players</span
+				<span class="text-blue-400">two</span><span class="text-zinc-500">-</span><span
+					class="text-red-400">players</span
 				>.org
 			</a>
 			<div class="flex items-center sm:hidden">
 				{#if $isConnected && $displayName}
 					<button
 						onclick={openNameModal}
-						class="lora-400 my-auto h-10 max-w-35 rounded-none border-0 bg-transparent text-center text-lg text-stone-400 hover:text-lime-400 focus:ring-0"
+						class="lora-400 my-auto h-10 max-w-35 rounded-none border-0 bg-transparent text-center text-lg text-zinc-300 hover:text-blue-400 focus:ring-0"
 					>
 						{$displayName}
 					</button>
 				{:else if $isConnected}
-					<span class="mr-4 text-xl text-lime-400">Loading...</span>
+					<span class="mr-4 text-xl text-blue-400">Loading...</span>
 				{/if}
-				<button class="text-2xl text-stone-200" onclick={() => (menuOpen = !menuOpen)}>
+				<button class="text-2xl text-zinc-200" onclick={() => (menuOpen = !menuOpen)}>
 					&#9776;
 				</button>
 			</div>
 		</div>
 		<nav
-			class="text-md absolute top-full left-0 z-10 w-full flex-col gap-2 border-2 border-stone-500 text-stone-200 opacity-90 sm:static sm:ms-4 sm:me-auto sm:flex sm:w-auto sm:flex-row sm:border-none"
+			class="text-md absolute top-full left-0 z-10 w-full flex-col gap-2 border-2 border-zinc-500 text-zinc-200 opacity-90 sm:static sm:ms-4 sm:me-auto sm:flex sm:w-auto sm:flex-row sm:border-none"
 			class:hidden={!menuOpen}
 		>
 			<section
 				class="py-1.5-2 flex h-full flex-col justify-center px-8"
 				class:border-b-1={page.url.pathname === '/'}
-				class:border-lime-400={page.url.pathname === '/'}
+				class:border-blue-400={page.url.pathname === '/'}
 			>
 				<a
-					class="transition-colors duration-200 hover:text-lime-400"
-					class:text-lime-400={page.url.pathname === '/'}
+					class="transition-colors duration-200 hover:text-blue-400"
+					class:text-blue-400={page.url.pathname === '/'}
 					href="/"
 				>
 					ABOUT
@@ -128,11 +128,11 @@
 			<section
 				class="py-1.5-2 flex h-full flex-col justify-center px-8"
 				class:border-b-1={page.url.pathname.startsWith('/play')}
-				class:border-lime-400={page.url.pathname.startsWith('/play')}
+				class:border-blue-400={page.url.pathname.startsWith('/play')}
 			>
 				<a
-					class="transition-colors duration-200 hover:text-lime-400"
-					class:text-lime-400={page.url.pathname.startsWith('/play')}
+					class="transition-colors duration-200 hover:text-blue-400"
+					class:text-blue-400={page.url.pathname.startsWith('/play')}
 					href="/play"
 				>
 					PLAY
@@ -143,35 +143,35 @@
 			{#if $isConnected && $displayName}
 				<button
 					onclick={openNameModal}
-					class="my-auto h-10 max-w-35 cursor-pointer rounded-none border-0 bg-transparent text-center text-lg text-stone-400 hover:text-lime-400 focus:ring-0"
+					class="my-auto h-10 max-w-35 cursor-pointer rounded-none border-0 bg-transparent text-center text-lg text-zinc-300 hover:text-blue-400 focus:ring-0"
 				>
 					{$displayName}
 				</button>
 			{:else if $isConnected}
-				<span class="text-xl text-lime-400">Loading...</span>
+				<span class="text-xl text-blue-400">Loading...</span>
 			{/if}
 		</div>
 	</header>
-	<div class="xl-landscape:px-16 mt-4 w-full bg-stone-950 px-4">
+	<div class="xl-landscape:px-16 mt-4 w-full bg-zinc-900 px-4">
 		<main class="w-full">
 			{@render children()}
 		</main>
 	</div>
-	<footer class="mt-4 bg-stone-950 p-8 text-center text-stone-400">
+	<footer class="mt-4 bg-zinc-900 p-8 text-center text-zinc-400">
 		<nav class="flex justify-center space-x-4">
-			<a href="/privacy-policy" class="transition-colors duration-200 hover:text-lime-400"
+			<a href="/privacy-policy" class="transition-colors duration-200 hover:text-blue-400"
 				>Privacy Policy</a
 			>
-			<a href="/terms-of-service" class="transition-colors duration-200 hover:text-lime-400"
+			<a href="/terms-of-service" class="transition-colors duration-200 hover:text-blue-400"
 				>Terms of Service</a
 			>
+			<a href="/contact" class="transition-colors duration-200 hover:text-blue-400">Contact</a>
 			<a
 				href="https://github.com/DCCXXV/two-players.org"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="transition-colors duration-200 hover:text-lime-400">GitHub</a
+				class="transition-colors duration-200 hover:text-blue-400">GitHub</a
 			>
-			<a href="/contact" class="transition-colors duration-200 hover:text-lime-400">Contact</a>
 		</nav>
 		<p class="mt-4 text-sm">
 			&copy; {new Date().getFullYear()} two-players.org. All rights reserved.
@@ -181,36 +181,36 @@
 
 {#if showNameModal}
 	<div
-		class="titillium-web-light bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
+		class="titillium-web-light fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80"
 		onclick={closeNameModal}
 		onkeydown={handleModalKeydown}
 		role="button"
 		tabindex="-1"
 	>
 		<div
-			class="rounded-0 w-full max-w-md border-b-1 border-stone-700 bg-stone-950 p-6"
+			class="rounded-0 w-full max-w-md border-b-1 border-zinc-700 bg-zinc-900 p-6"
 			onclick={(e) => e.stopPropagation()}
 			role="dialog"
 			tabindex="-1"
 		>
-			<h2 class="mb-4 text-center text-2xl text-lime-400">Change Display Name</h2>
+			<h2 class="mb-4 text-center text-2xl text-blue-400">Change Display Name</h2>
 			<input
 				type="text"
 				bind:value={tempName}
-				class="mb-6 w-full rounded-none border-0 border-b-1 border-stone-700 bg-stone-950 px-4 py-2 text-center text-xl text-stone-400 focus:border-lime-400 focus:ring-0"
+				class="mb-6 w-full rounded-none border-0 border-b-1 border-zinc-700 bg-zinc-900 px-4 py-2 text-center text-xl text-zinc-300 focus:border-blue-400 focus:ring-0"
 				placeholder="Enter new name"
 				autofocus
 			/>
 			<div class="flex justify-center gap-4">
 				<button
 					onclick={closeNameModal}
-					class="rounded-none border-b-1 border-rose-400 bg-transparent px-6 py-2 text-lg text-rose-400 hover:bg-rose-400 hover:text-stone-950"
+					class="cursor-pointer rounded-none border-b-1 border-red-400 bg-transparent px-6 py-2 text-lg text-red-400 hover:bg-red-400 hover:text-zinc-950"
 				>
 					Cancel
 				</button>
 				<button
 					onclick={saveName}
-					class="rounded-none border-b-1 border-lime-400 bg-transparent px-6 py-2 text-lg text-lime-400 hover:bg-lime-400 hover:text-stone-950"
+					class="cursor-pointer rounded-none border-b-1 border-blue-400 bg-transparent px-6 py-2 text-lg text-blue-400 hover:bg-blue-400 hover:text-zinc-950"
 				>
 					Accept
 				</button>

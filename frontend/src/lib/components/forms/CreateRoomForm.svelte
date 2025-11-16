@@ -37,11 +37,11 @@
 	}
 </script>
 
-<div class="w-full bg-stone-900 border-b-1 border-stone-700 p-4 md:max-w-120">
+<div class="w-full bg-zinc-800 border-b-1 border-zinc-700 p-4 md:max-w-120">
 	<form class="flex flex-col gap-4" onsubmit={handleCreateRoom}>
 		<input
 			name="roomName"
-			class="input lora-700 rounded-none border-0 border-b-1 border-stone-700 bg-stone-950 text-2xl text-lime-400 hover:border-lime-400 focus:ring-0"
+			class="input lora-700 rounded-none border-0 border-b-1 border-zinc-500 bg-zinc-800 text-2xl text-blue-400 hover:border-blue-400 focus:ring-0"
 			type="text"
 			placeholder="Name of the room"
 			bind:value={roomNameValue}
@@ -50,7 +50,7 @@
 		<div class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center"></div>
 		<button
 			type="submit"
-			class="ms-auto w-50 cursor-pointer rounded-none bg-lime-400 border-b-2 border-r-2 border-lime-900 p-2 font-bold text-stone-950"
+			class="ms-auto w-50 cursor-pointer rounded-none bg-blue-400 border-b-2 border-r-2 border-blue-900 p-2 font-bold text-zinc-950"
 			disabled={!displayName || !roomNameValue.trim()}
 		>
 			Create room

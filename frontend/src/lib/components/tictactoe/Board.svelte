@@ -8,7 +8,7 @@
 	}>();
 </script>
 
-<div class="mx-auto grid max-w-lg grid-cols-3 gap-2 border-stone-900 p-2">
+<div class="mx-auto grid max-w-lg grid-cols-3 gap-2 border-zinc-900 p-2">
 	{#each board as cellValue, i}
 		<Cell value={cellValue} disabled={disabled || cellValue != ''} onClick={() => onMove(i)} />
 	{/each}

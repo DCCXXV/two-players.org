@@ -14,7 +14,7 @@
 
 <button
 	id="rematch-button"
-	class="w-full cursor-pointer border-r-2 border-b-2 border-lime-900 bg-lime-500 p-2 text-xl font-bold text-lime-950"
+	class="w-full cursor-pointer border-r-2 border-b-2 border-blue-900 bg-blue-500 p-2 text-xl font-bold text-blue-950"
 	on:click={() => {
 		onClick();
 		playClickSound();

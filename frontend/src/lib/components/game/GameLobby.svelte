@@ -107,7 +107,7 @@
 	<li><a class="opacity-60 hover:underline" href="/play">Play</a></li>
 	<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
 	<li>
-		<a class="text-lime-400 hover:underline" href={`/play/${gameConfig.path}`}
+		<a class="text-blue-400 hover:underline" href={`/play/${gameConfig.path}`}
 			>{gameConfig.displayName}</a
 		>
 	</li>
@@ -118,8 +118,8 @@
 		{#if $displayName}
 			<CreateRoomForm {gameConfig} displayName={$displayName} onRoomCreate={handleRoomCreation} />
 		{:else}
-			<div class="flex w-full items-center justify-center border-2 border-stone-500 p-4 md:max-w-120">
-				<p class="text-stone-400">Initializing...</p>
+			<div class="flex w-full items-center justify-center border-2 border-zinc-500 p-4 md:max-w-120">
+				<p class="text-zinc-400">Initializing...</p>
 			</div>
 		{/if}
 
@@ -127,12 +127,12 @@
 			<Collapsible title="Available rooms">
 				{#if isLoadingRooms}
 					<div class="w-full p-8 text-center">
-						<p class="text-stone-400">Loading rooms...</p>
+						<p class="text-zinc-400">Loading rooms...</p>
 					</div>
 				{:else if errorLoadingRooms}
 					<div class="w-full p-8 text-center">
 						<p class="text-error-500">Error: {errorLoadingRooms}</p>
-						<button type="button" class="btn preset-outline-lime mt-4" onclick={loadRooms}
+						<button type="button" class="btn preset-outline-blue mt-4" onclick={loadRooms}
 							>Try again</button
 						>
 					</div>
@@ -142,7 +142,7 @@
 					{/each}
 				{:else}
 					<div class="w-full p-8 text-center">
-						<p class="text-stone-400">No public rooms available. Create one!</p>
+						<p class="text-zinc-400">No public rooms available. Create one!</p>
 					</div>
 				{/if}
 			</Collapsible>

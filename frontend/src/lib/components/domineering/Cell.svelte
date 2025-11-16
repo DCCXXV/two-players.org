@@ -18,11 +18,11 @@
 	}>();
 
 	function getCellClass() {
-		if (value === 'H') return 'bg-lime-400 border-stone-950';
-		if (value === 'V') return 'bg-rose-400 border-stone-950';
-		if (isPreview && canPlace) return 'bg-cyan-400/20 hover:bg-cyan-400/20';
-		if (isPreview && !canPlace) return 'bg-red-500/30';
-		return 'bg-stone-950 hover:bg-stone-800';
+		if (value === 'H') return 'bg-blue-400 border-zinc-950';
+		if (value === 'V') return 'bg-red-400 border-zinc-950';
+		if (isPreview && canPlace) return 'bg-green-400/10';
+		if (isPreview && !canPlace) return 'bg-red-400/10';
+		return 'bg-zinc-950 hover:bg-zinc-800';
 	}
 </script>
 
@@ -31,7 +31,7 @@
 	{onmouseenter}
 	{onmouseleave}
 	{disabled}
-	class="aspect-square w-14 border-2 border-stone-700 text-5xl font-bold text-stone-950 transition-colors disabled:cursor-not-allowed md:w-20
+	class="aspect-square w-14 border-2 border-zinc-700 text-5xl font-bold text-zinc-950 transition-colors disabled:cursor-not-allowed md:w-20
 	{getCellClass()}
 	{disabled && !value ? 'opacity-50' : ''}"
 >
