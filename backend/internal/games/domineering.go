@@ -133,8 +133,8 @@ func (d *Domineering) checkWinner(symbol string) bool {
 }
 
 func (d *Domineering) hasValidMoves(symbol string) bool {
-	for r := 0; r < 8; r++ {
-		for c := 0; c < 8; c++ {
+	for r := range d.Board {
+		for c := range d.Board[r] {
 			if symbol == "H" {
 				if c+1 < 8 && d.Board[r][c] == "" && d.Board[r][c+1] == "" {
 					return true

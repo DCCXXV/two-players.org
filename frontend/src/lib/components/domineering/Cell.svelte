@@ -8,7 +8,7 @@
 		isPreview = false,
 		canPlace = false
 	} = $props<{
-		value: 'H' | 'V' | '';
+		value: string; // 'H' | 'V' | ''
 		disabled: boolean;
 		onclick: () => void;
 		onmouseenter?: () => void;
@@ -31,7 +31,7 @@
 	{onmouseenter}
 	{onmouseleave}
 	{disabled}
-	class="aspect-square w-14 border-2 border-zinc-700 text-5xl font-bold text-zinc-950 transition-colors disabled:cursor-not-allowed md:w-20
+	class="aspect-square w-full border border-zinc-700 text-2xl font-bold text-zinc-950 transition-colors disabled:cursor-not-allowed sm:border-2 sm:text-3xl md:text-4xl
 	{getCellClass()}
 	{disabled && !value ? 'opacity-50' : ''}"
 >

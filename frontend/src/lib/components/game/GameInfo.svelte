@@ -11,15 +11,15 @@
 
 <aside class="flex h-full flex-col">
 	<Collapsible title="About {gameConfig.displayName}">
-		<div class="bg-zinc-800  p-4 text-start">
+		<div class="bg-zinc-800 p-4 text-start">
 			<p class="mb-4 text-zinc-200">{gameConfig.description}</p>
 
 			{#if gameConfig.gameplayGif}
-				<div class="mb-4 overflow-hidden w-full">
+				<div class="mb-4 w-full overflow-hidden">
 					<img
 						src={gameConfig.gameplayGif}
 						alt="{gameConfig.displayName} gameplay"
-						class="h-auto w-2/3 border-2 border-zinc-700 mx-auto"
+						class="mx-auto h-auto w-2/3 border-2 border-zinc-700"
 					/>
 				</div>
 			{/if}
@@ -27,7 +27,7 @@
 			<div class="mt-4">
 				<h3 class="mb-2 text-lg font-bold text-blue-400">Rules</h3>
 				<ul class="space-y-2">
-					{#each gameConfig.rules as rule, index}
+					{#each gameConfig.rules as rule, index (index)}
 						<li class="flex gap-2 text-sm text-zinc-200">
 							<span class="text-blue-300">{index + 1}.</span>
 							<span>{rule}</span>

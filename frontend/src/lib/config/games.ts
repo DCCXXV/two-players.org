@@ -18,7 +18,8 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
 		id: 'tic-tac-toe',
 		displayName: 'Tic-Tac-Toe',
 		path: 'tic-tac-toe',
-		description: 'The classic 3x3 grid game where players alternate placing X\'s and O\'s, aiming to get three in a row.',
+		description:
+			"The classic 3x3 grid game where players alternate placing X's and O's, aiming to get three in a row.",
 		rules: [
 			'You must place your symbol in an empty square',
 			'You must make a move on your turn',
@@ -37,7 +38,8 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
 		id: 'domineering',
 		displayName: 'Domineering',
 		path: 'domineering',
-		description: 'A strategic blocking game where one player places horizontal dominoes and the other vertical, competing for space on the grid.',
+		description:
+			'A strategic blocking game where one player places horizontal dominoes and the other vertical, competing for space on the grid.',
 		rules: [
 			'Horizontal player can only place dominoes horizontally',
 			'Vertical player can only place dominoes vertically',
@@ -52,31 +54,12 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
 		},
 		playerSymbols: ['H', 'V']
 	},
-
-	nim: {
-		id: 'nim',
-		displayName: 'Nim',
-		path: 'nim',
-		description: 'A strategic game starting with 21 sticks. Players take turns removing 1, 2, or 3 sticks. Force your opponent to take the last stick and win!',
-		rules: [
-			'You must remove 1, 2, or 3 sticks on your turn',
-			'You cannot skip your turn',
-			'You cannot remove more than 3 sticks',
-			'You lose if you take the last stick'
-		],
-		gameplayGif: '/img/nim.gif',
-		sounds: {
-			move1: '/sounds/move1.wav',
-			move2: '/sounds/move2.wav',
-			gameOver: '/sounds/gameOver.wav'
-		},
-		playerSymbols: ['P1', 'P2']
-	},
 	'dots-and-boxes': {
 		id: 'dots-and-boxes',
 		displayName: 'Dots & Boxes',
 		path: 'dots-and-boxes',
-		description: 'Connect dots to form boxes and claim them. The player who completes the most boxes wins!',
+		description:
+			'Connect dots to form boxes and claim them. The player who completes the most boxes wins!',
 		rules: [
 			'You must draw a line between two adjacent dots',
 			'You cannot draw a line that already exists',
@@ -84,6 +67,26 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
 			'Most boxes claimed wins the game'
 		],
 		gameplayGif: '/img/dots-and-boxes.gif',
+		sounds: {
+			move1: '/sounds/move1.wav',
+			move2: '/sounds/move2.wav',
+			gameOver: '/sounds/gameOver.wav'
+		},
+		playerSymbols: ['P1', 'P2']
+	},
+	nim: {
+		id: 'nim',
+		displayName: 'Nim',
+		path: 'nim',
+		description:
+			'A strategic game starting with 21 sticks. Players take turns removing 1, 2, or 3 sticks. Force your opponent to take the last stick and win!',
+		rules: [
+			'You must remove 1, 2, or 3 sticks on your turn',
+			'You cannot skip your turn',
+			'You cannot remove more than 3 sticks',
+			'You lose if you take the last stick'
+		],
+		gameplayGif: '/img/nim.gif',
 		sounds: {
 			move1: '/sounds/move1.wav',
 			move2: '/sounds/move2.wav',

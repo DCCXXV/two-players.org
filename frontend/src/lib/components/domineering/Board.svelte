@@ -75,9 +75,9 @@
 	}
 </script>
 
-<div class="mx-auto grid max-w-fit grid-cols-8 gap-0">
-	{#each board as row, rowIndex}
-		{#each row as cell, colIndex}
+<div class="mx-auto grid w-full max-w-[min(100vw-2rem,40rem)] grid-cols-8 gap-0">
+	{#each board as row, rowIndex (rowIndex)}
+		{#each row as cell, colIndex (colIndex)}
 			<Cell
 				value={cell}
 				onclick={() => handleCellClick(rowIndex, colIndex)}

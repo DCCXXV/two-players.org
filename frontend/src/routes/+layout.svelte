@@ -157,8 +157,8 @@
 			{@render children()}
 		</main>
 	</div>
-	<footer class="mt-4 bg-zinc-900 p-8 text-center text-zinc-400">
-		<nav class="flex justify-center space-x-4">
+	<footer class="mt-4 bg-zinc-900 p-4 text-center text-zinc-400 sm:p-8">
+		<nav class="flex flex-wrap justify-center gap-2 sm:gap-4">
 			<a href="/privacy-policy" class="transition-colors duration-200 hover:text-blue-400"
 				>Privacy Policy</a
 			>
@@ -166,6 +166,12 @@
 				>Terms of Service</a
 			>
 			<a href="/contact" class="transition-colors duration-200 hover:text-blue-400">Contact</a>
+			<a
+				href="https://discord.gg/8s9NneBy"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="transition-colors duration-200 hover:text-blue-400">Discord</a
+			>
 			<a
 				href="https://github.com/DCCXXV/two-players.org"
 				target="_blank"
