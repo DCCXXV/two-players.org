@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { page } from '$app/state';
+	import { page as pageStore } from '$app/state';
 	import { onMount } from 'svelte';
 	import {
 		connectWebSocket,
@@ -44,7 +44,7 @@
 		connectWebSocket();
 
 		const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-			if ($gameState && page.url.pathname.includes('/play/tic-tac-toe/')) {
+			if ($gameState && pageStore.url.pathname.includes('/play/tic-tac-toe/')) {
 				event.preventDefault();
 				event.returnValue = 'Are you sure you want to leave the room?';
 			}
@@ -60,23 +60,25 @@
 	});
 
 	let { children, data } = $props();
+
+	let meta = $derived(pageStore.data.meta || data.meta);
 </script>
 
 <svelte:head>
-	<title>{data.meta.title}</title>
-	<meta name="description" content={data.meta.description} />
+	<title>{meta.title}</title>
+	<meta name="description" content={meta.description} />
 
 	<meta property="og:type" content="website" />
-	<meta property="og:url" content={data.meta.url} />
-	<meta property="og:title" content={data.meta.title} />
-	<meta property="og:description" content={data.meta.description} />
-	<meta property="og:image" content={data.meta.imageUrl} />
+	<meta property="og:url" content={meta.url} />
+	<meta property="og:title" content={meta.title} />
+	<meta property="og:description" content={meta.description} />
+	<meta property="og:image" content={meta.imageUrl} />
 
 	<meta property="twitter:card" content="summary_large_image" />
-	<meta property="twitter:url" content={data.meta.url} />
-	<meta property="twitter:title" content={data.meta.title} />
-	<meta property="twitter:description" content={data.meta.description} />
-	<meta property="twitter:image" content={data.meta.imageUrl} />
+	<meta property="twitter:url" content={meta.url} />
+	<meta property="twitter:title" content={meta.title} />
+	<meta property="twitter:description" content={meta.description} />
+	<meta property="twitter:image" content={meta.imageUrl} />
 </svelte:head>
 
 <div class="titillium-web-light grid h-screen w-full grid-rows-[auto_1fr_auto]">
@@ -114,12 +116,12 @@
 		>
 			<section
 				class="py-1.5-2 flex h-full flex-col justify-center px-8"
-				class:border-b-1={page.url.pathname === '/'}
-				class:border-blue-400={page.url.pathname === '/'}
+				class:border-b-1={pageStore.url.pathname === '/'}
+				class:border-blue-400={pageStore.url.pathname === '/'}
 			>
 				<a
 					class="transition-colors duration-200 hover:text-blue-400"
-					class:text-blue-400={page.url.pathname === '/'}
+					class:text-blue-400={pageStore.url.pathname === '/'}
 					href="/"
 				>
 					ABOUT
@@ -127,12 +129,12 @@
 			</section>
 			<section
 				class="py-1.5-2 flex h-full flex-col justify-center px-8"
-				class:border-b-1={page.url.pathname.startsWith('/play')}
-				class:border-blue-400={page.url.pathname.startsWith('/play')}
+				class:border-b-1={pageStore.url.pathname.startsWith('/play')}
+				class:border-blue-400={pageStore.url.pathname.startsWith('/play')}
 			>
 				<a
 					class="transition-colors duration-200 hover:text-blue-400"
-					class:text-blue-400={page.url.pathname.startsWith('/play')}
+					class:text-blue-400={pageStore.url.pathname.startsWith('/play')}
 					href="/play"
 				>
 					PLAY
