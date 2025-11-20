@@ -12,9 +12,9 @@ export const load: PageLoad = async ({ params, fetch, url }) => {
 				room,
 				error: null,
 				meta: {
-					title: `Tic-Tac-Toe Game | Room ${roomId}`,
-					description: 'Join this Tic-Tac-Toe game and challenge your friend!',
-					imageUrl: `${url.origin}/screenshots/tic-tac-toe.png`,
+					title: `Join ${room.name} - Tic-Tac-Toe | Two Players`,
+					description: `Join "${room.name}" and play Tic-Tac-Toe! Challenge your friend to the classic 3x3 strategy game.`,
+					imageUrl: `${url.origin}/img/tic-tac-toe-preview.png`,
 					url: url.href
 				}
 			};
@@ -34,9 +34,9 @@ export const load: PageLoad = async ({ params, fetch, url }) => {
 			room,
 			error: null,
 			meta: {
-				title: `Tic-Tac-Toe Game | Room ${roomId}`,
-				description: 'Join this Tic-Tac-Toe game and challenge your friend!',
-				imageUrl: `${url.origin}/screenshots/tic-tac-toe.png`,
+				title: `Join ${room.name} - Tic-Tac-Toe | Two Players`,
+				description: `Join "${room.name}" and play Tic-Tac-Toe! Challenge your friend to the classic 3x3 strategy game.`,
+				imageUrl: `${url.origin}/img/tic-tac-toe-preview.png`,
 				url: url.href
 			}
 		};

@@ -16,7 +16,7 @@
 	import RematchButton from '$lib/components/ui/RematchButton.svelte';
 	import Collapsible from '$lib/components/ui/Collapsible.svelte';
 	import GameChat from '$lib/components/game/GameChat.svelte';
-	import { Volume2, VolumeX } from 'lucide-svelte';
+	import { Volume2, VolumeX, Link } from 'lucide-svelte';
 	import type { Snippet } from 'svelte';
 
 	interface Room {
@@ -41,6 +41,7 @@
 	let prevTurn = $state<number | undefined>(undefined);
 	let gameHasEnded = $state(false);
 	let isMuted = $state(false);
+	let copyLinkFeedback = $state<'idle' | 'copied' | 'error'>('idle');
 
 	// Sound effects logic
 	onMount(() => {
@@ -154,6 +155,27 @@
 			leaveRoom();
 		}
 	}
+
+	async function handleCopyLink() {
+		try {
+			const roomUrl = `${window.location.origin}/play/${gameConfig.path}/${room.id}`;
+			await navigator.clipboard.writeText(roomUrl);
+			copyLinkFeedback = 'copied';
+			setTimeout(() => {
+				copyLinkFeedback = 'idle';
+			}, 2000);
+		} catch (err) {
+			console.error('Failed to copy link:', err);
+			copyLinkFeedback = 'error';
+			setTimeout(() => {
+				copyLinkFeedback = 'idle';
+			}, 2000);
+		}
+	}
+
+	let showCopyLinkButton = $derived(
+		$gameState?.players?.filter((p) => p !== '').length === 1 && $gameState.game.winner === ''
+	);
 </script>
 
 {#if error}
@@ -165,7 +187,11 @@
 	<ol class="mb-6 flex items-center gap-4">
 		<li><a class="opacity-60 hover:underline" href="/play">Play</a></li>
 		<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
-		<li><a class="opacity-60 hover:underline" href={`/play/${gameConfig.path}`}>{gameConfig.displayName}</a></li>
+		<li>
+			<a class="opacity-60 hover:underline" href={`/play/${gameConfig.path}`}
+				>{gameConfig.displayName}</a
+			>
+		</li>
 		<li class="opacity-50" aria-hidden="true">&rsaquo;</li>
 		<li><span class="text-blue-400">Game room</span></li>
 	</ol>
@@ -226,6 +252,25 @@
 								maxPlayers={$gameState.maxPlayers}
 								onClick={handleRematch}
 							/>
+						</div>
+					{:else if showCopyLinkButton}
+						<div class="mt-4 w-full">
+							<button
+								on:click={handleCopyLink}
+								class="w-full cursor-pointer border-r-2 border-b-2 border-blue-900 bg-blue-400 p-2 text-xl font-bold text-blue-950 transition-colors hover:bg-blue-500"
+								aria-label="Copy room link"
+							>
+								<span class="flex items-center justify-center gap-2">
+									<Link size={20} />
+									{#if copyLinkFeedback === 'copied'}
+										Link Copied!
+									{:else if copyLinkFeedback === 'error'}
+										Failed to copy
+									{:else}
+										Copy Room Link
+									{/if}
+								</span>
+							</button>
 						</div>
 					{/if}
 				{:else}

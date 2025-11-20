@@ -12,9 +12,9 @@ export const load: PageLoad = async ({ params, fetch, url }) => {
 				room,
 				error: null,
 				meta: {
-					title: `Nim Game | Room ${roomId}`,
-					description: 'Join this Nim game and challenge your friend!',
-					imageUrl: `${url.origin}/screenshots/nim.png`,
+					title: `Join ${room.name} - Nim | Two Players`,
+					description: `Join "${room.name}" and play Nim! A mathematical strategy game - take 1-3 sticks per turn, don't take the last one!`,
+					imageUrl: `${url.origin}/img/nim-preview.png`,
 					url: url.href
 				}
 			};
@@ -34,9 +34,9 @@ export const load: PageLoad = async ({ params, fetch, url }) => {
 			room,
 			error: null,
 			meta: {
-				title: `Nim Game | Room ${roomId}`,
-				description: 'Join this Nim game and challenge your friend!',
-				imageUrl: `${url.origin}/screenshots/nim.png`,
+				title: `Join ${room.name} - Nim | Two Players`,
+				description: `Join "${room.name}" and play Nim! A mathematical strategy game - take 1-3 sticks per turn, don't take the last one!`,
+				imageUrl: `${url.origin}/img/nim-preview.png`,
 				url: url.href
 			}
 		};

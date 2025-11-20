@@ -12,9 +12,9 @@ export const load: PageLoad = async ({ params, fetch, url }) => {
 				room,
 				error: null,
 				meta: {
-					title: `Dots & Boxes | Room ${roomId}`,
-					description: 'Join this Dots & Boxes game and challenge your friend!',
-					imageUrl: `${url.origin}/screenshots/dots-and-boxes.png`,
+					title: `Join ${room.name} - Dots & Boxes | Two Players`,
+					description: `Join "${room.name}" and play Dots & Boxes! Connect dots and complete boxes in this classic paper-and-pencil strategy game.`,
+					imageUrl: `${url.origin}/img/dots-and-boxes-preview.png`,
 					url: url.href
 				}
 			};
@@ -34,9 +34,9 @@ export const load: PageLoad = async ({ params, fetch, url }) => {
 			room,
 			error: null,
 			meta: {
-				title: `Dots & Boxes | Room ${roomId}`,
-				description: 'Join this Dots & Boxes game and challenge your friend!',
-				imageUrl: `${url.origin}/screenshots/dots-and-boxes.png`,
+				title: `Join ${room.name} - Dots & Boxes | Two Players`,
+				description: `Join "${room.name}" and play Dots & Boxes! Connect dots and complete boxes in this classic paper-and-pencil strategy game.`,
+				imageUrl: `${url.origin}/img/dots-and-boxes-preview.png`,
 				url: url.href
 			}
 		};

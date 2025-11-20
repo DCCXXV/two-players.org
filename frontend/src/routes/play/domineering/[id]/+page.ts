@@ -12,9 +12,9 @@ export const load: PageLoad = async ({ params, fetch, url }) => {
 				room,
 				error: null,
 				meta: {
-					title: `Domineering Game | Room ${roomId}`,
-					description: 'Join this Domineering game and challenge your friend!',
-					imageUrl: `${url.origin}/screenshots/tic-tac-toe.png`,
+					title: `Join ${room.name} - Domineering | Two Players`,
+					description: `Join "${room.name}" and play Domineering! A strategic tile-placement game where you compete to make the last legal move.`,
+					imageUrl: `${url.origin}/img/domineering-preview.png`,
 					url: url.href
 				}
 			};
@@ -34,9 +34,9 @@ export const load: PageLoad = async ({ params, fetch, url }) => {
 			room,
 			error: null,
 			meta: {
-				title: `Domineering Game | Room ${roomId}`,
-				description: 'Join this Domineering game and challenge your friend!',
-				imageUrl: `${url.origin}/screenshots/tic-tac-toe.png`,
+				title: `Join ${room.name} - Domineering | Two Players`,
+				description: `Join "${room.name}" and play Domineering! A strategic tile-placement game where you compete to make the last legal move.`,
+				imageUrl: `${url.origin}/img/domineering-preview.png`,
 				url: url.href
 			}
 		};
