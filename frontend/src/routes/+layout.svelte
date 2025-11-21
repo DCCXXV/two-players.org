@@ -10,6 +10,7 @@
 		gameState,
 		updateDisplayName
 	} from '$lib/socketStore';
+	import { SvelteSeo } from 'svelte-seo';
 
 	let menuOpen = $state(false);
 	let showNameModal = $state(false);
@@ -64,22 +65,29 @@
 	let meta = $derived(pageStore.data.meta || data.meta);
 </script>
 
-<svelte:head>
-	<title>{meta.title}</title>
-	<meta name="description" content={meta.description} />
-
-	<meta property="og:type" content="website" />
-	<meta property="og:url" content={meta.url} />
-	<meta property="og:title" content={meta.title} />
-	<meta property="og:description" content={meta.description} />
-	<meta property="og:image" content={meta.imageUrl} />
-
-	<meta property="twitter:card" content="summary_large_image" />
-	<meta property="twitter:url" content={meta.url} />
-	<meta property="twitter:title" content={meta.title} />
-	<meta property="twitter:description" content={meta.description} />
-	<meta property="twitter:image" content={meta.imageUrl} />
-</svelte:head>
+<SvelteSeo
+	title={meta.title}
+	description={meta.description}
+	openGraph={{
+		type: 'website',
+		url: meta.url,
+		title: meta.title,
+		description: meta.description,
+		images: [
+			{
+				url: meta.imageUrl,
+				alt: meta.title
+			}
+		]
+	}}
+	twitter={{
+		card: 'summary_large_image',
+		site: meta.url,
+		title: meta.title,
+		description: meta.description,
+		image: meta.imageUrl
+	}}
+/>
 
 <div class="titillium-web-light grid h-screen w-full grid-rows-[auto_1fr_auto]">
 	<header

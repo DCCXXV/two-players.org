@@ -4,6 +4,7 @@
 	import Board from '$lib/components/dotsandboxes/Board.svelte';
 	import GameStatus from '$lib/components/dotsandboxes/GameStatus.svelte';
 	import { sendWebSocketMessage, gameState, displayName } from '$lib/socketStore';
+	import { SvelteSeo } from 'svelte-seo';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -30,24 +31,31 @@
 	}
 </script>
 
-<svelte:head>
-	{#if data.meta}
-		<title>{data.meta.title}</title>
-		<meta name="description" content={data.meta.description} />
-
-		<meta property="og:type" content="website" />
-		<meta property="og:url" content={data.meta.url} />
-		<meta property="og:title" content={data.meta.title} />
-		<meta property="og:description" content={data.meta.description} />
-		<meta property="og:image" content={data.meta.imageUrl} />
-
-		<meta property="twitter:card" content="summary_large_image" />
-		<meta property="twitter:url" content={data.meta.url} />
-		<meta property="twitter:title" content={data.meta.title} />
-		<meta property="twitter:description" content={data.meta.description} />
-		<meta property="twitter:image" content={data.meta.imageUrl} />
-	{/if}
-</svelte:head>
+{#if data.meta}
+	<SvelteSeo
+		title={data.meta.title}
+		description={data.meta.description}
+		openGraph={{
+			type: 'website',
+			url: data.meta.url,
+			title: data.meta.title,
+			description: data.meta.description,
+			images: [
+				{
+					url: data.meta.imageUrl,
+					alt: data.meta.title
+				}
+			]
+		}}
+		twitter={{
+			card: 'summary_large_image',
+			site: data.meta.url,
+			title: data.meta.title,
+			description: data.meta.description,
+			image: data.meta.imageUrl
+		}}
+	/>
+{/if}
 
 <GameRoom {gameConfig} room={data.room} error={data.error}>
 	{#snippet boardComponent({ gameState, myTurn, disabled })}
