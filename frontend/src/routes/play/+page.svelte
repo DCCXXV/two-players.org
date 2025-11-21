@@ -5,8 +5,15 @@
 	import RoomCard from '$lib/components/ui/RoomCard.svelte';
 	import { roomListUpdates } from '$lib/socketStore';
 	import { getAllGameConfigs } from '$lib/config/games';
+	import { page } from '$app/stores';
 
 	const games = getAllGameConfigs();
+
+	const title = 'Play Games | Two Players';
+	const description =
+		'Browse and join available game rooms or create your own. Play Tic-Tac-Toe, Domineering, Nim, Dots & Boxes and more!';
+	const imageUrl = `${$page.url.origin}/img/tic-tac-toe-preview.png`;
+	const url = $page.url.href;
 
 	interface Room {
 		id: string;
@@ -94,6 +101,21 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{title}</title>
+	<meta name="description" content={description} />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content={url} />
+	<meta property="og:title" content={title} />
+	<meta property="og:description" content={description} />
+	<meta property="og:image" content={imageUrl} />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:url" content={url} />
+	<meta name="twitter:title" content={title} />
+	<meta name="twitter:description" content={description} />
+	<meta name="twitter:image" content={imageUrl} />
+</svelte:head>
+
 <section class="my-8">
 	<Collapsible title="Available games">
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -125,11 +147,11 @@
 				>
 			</div>
 		{:else if allRooms.length > 0}
-		<div class="flex gap-4">
-			{#each allRooms as room (room.id)}
-				<RoomCard {room} />
-			{/each}
-		</div>
+			<div class="flex gap-4">
+				{#each allRooms as room (room.id)}
+					<RoomCard {room} />
+				{/each}
+			</div>
 		{:else}
 			<div class="w-full p-8 text-center">
 				<p class="text-zinc-400">No public rooms available. Create one from a game page!</p>

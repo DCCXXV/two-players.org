@@ -10,7 +10,6 @@
 		gameState,
 		updateDisplayName
 	} from '$lib/socketStore';
-	import { SvelteSeo } from 'svelte-seo';
 
 	let menuOpen = $state(false);
 	let showNameModal = $state(false);
@@ -61,33 +60,7 @@
 	});
 
 	let { children, data } = $props();
-
-	let meta = $derived(pageStore.data.meta || data.meta);
 </script>
-
-<SvelteSeo
-	title={meta.title}
-	description={meta.description}
-	openGraph={{
-		type: 'website',
-		url: meta.url,
-		title: meta.title,
-		description: meta.description,
-		images: [
-			{
-				url: meta.imageUrl,
-				alt: meta.title
-			}
-		]
-	}}
-	twitter={{
-		card: 'summary_large_image',
-		site: meta.url,
-		title: meta.title,
-		description: meta.description,
-		image: meta.imageUrl
-	}}
-/>
 
 <div class="titillium-web-light grid h-screen w-full grid-rows-[auto_1fr_auto]">
 	<header
