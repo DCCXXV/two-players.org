@@ -30,8 +30,8 @@
 	}
 </script>
 
-{#if data.meta}
-	<svelte:head>
+<svelte:head>
+	{#if data.meta}
 		<title>{data.meta.title}</title>
 		<meta name="description" content={data.meta.description} />
 		<meta property="og:type" content="website" />
@@ -44,8 +44,8 @@
 		<meta name="twitter:title" content={data.meta.title} />
 		<meta name="twitter:description" content={data.meta.description} />
 		<meta name="twitter:image" content={data.meta.imageUrl} />
-	</svelte:head>
-{/if}
+	{/if}
+</svelte:head>
 
 <GameRoom {gameConfig} room={data.room} error={data.error}>
 	{#snippet boardComponent({ gameState, myTurn, disabled })}
