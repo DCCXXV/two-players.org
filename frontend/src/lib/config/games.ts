@@ -39,7 +39,7 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
 		displayName: 'Domineering',
 		path: 'domineering',
 		description:
-			'A strategic blocking game where one player places horizontal dominoes and the other vertical, competing for space on the grid.',
+			'A strategic blocking game where one player places horizontal dominoes and the other vertical, competing for space on the grid. The player who can no longer make a valid move loses.',
 		rules: [
 			'Horizontal player can only place dominoes horizontally',
 			'Vertical player can only place dominoes vertically',

@@ -22,7 +22,7 @@
 		if (value === 'P2') return 'bg-zinc-950 border-y-5 border-dotted border-red-400';
 		if (isPreview && canPlace) return 'bg-green-400/30';
 		if (isPreview && !canPlace) return 'bg-red-400/30';
-		//if (disabled && !value) return 'bg-zinc-700';
+		if (disabled && !value) return 'bg-zinc-800';
 		return 'bg-zinc-700';
 	}
 </script>
