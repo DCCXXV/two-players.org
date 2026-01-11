@@ -52,10 +52,3 @@ func LoadConfig() (*Config, error) {
 	log.Printf("Configuration loaded: Port=%s, AllowedOrigins=%v", cfg.ServerPort, cfg.AllowedOrigins)
 	return cfg, nil
 }
-
-func getEnv(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return fallback
-}

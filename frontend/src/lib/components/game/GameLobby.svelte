@@ -116,9 +116,21 @@
 <div class="flex flex-col gap-4 lg:flex-row">
 	<div class="w-full lg:w-3/5">
 		{#if $displayName}
-			<CreateRoomForm {gameConfig} displayName={$displayName} onRoomCreate={handleRoomCreation} />
+			<div class="flex flex-col gap-3 lg:flex-row">
+				<CreateRoomForm {gameConfig} displayName={$displayName} onRoomCreate={handleRoomCreation} />
+				<div class="w-full bg-zinc-900 text-amber-300">
+					<h3 class="font-bold">NOTE</h3>
+					<p>
+						Currently if you want to play vs yourself you will have to open two-players.org in new
+						tab and look for your room or copy and paste the room link when you create it to get in
+						directly.
+					</p>
+				</div>
+			</div>
 		{:else}
-			<div class="flex w-full items-center justify-center border-2 border-zinc-500 p-4 md:max-w-120">
+			<div
+				class="flex w-full items-center justify-center border-2 border-zinc-500 p-4 md:max-w-120"
+			>
 				<p class="text-zinc-400">Initializing...</p>
 			</div>
 		{/if}

@@ -18,13 +18,13 @@ func NewDatabaseConnection(cfg *config.Config) (*pgxpool.Pool, error) {
 
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create connection pool: %w", err)
+		return nil, fmt.Errorf("Failed to create connection pool: %w", err)
 	}
 
 	err = pool.Ping(ctx)
 	if err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		return nil, fmt.Errorf("Failed to ping database: %w", err)
 	}
 
 	log.Println("Database connected successfully")

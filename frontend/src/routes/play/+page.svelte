@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import GameCard from '$lib/components/ui/GameCard.svelte';
-	import Collapsible from '$lib/components/ui/Collapsible.svelte';
 	import RoomCard from '$lib/components/ui/RoomCard.svelte';
 	import { roomListUpdates } from '$lib/socketStore';
 	import { getAllGameConfigs } from '$lib/config/games';
@@ -116,46 +115,76 @@
 	<meta name="twitter:image" content={imageUrl} />
 </svelte:head>
 
-<section class="my-8">
-	<Collapsible title="Available games">
-		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-			{#each games as game}
+<div class="mx-auto max-w-5xl">
+	<section class="my-8">
+		<div class="mb-3 border-b-1 border-zinc-700 pb-1">
+			<h2 class="text-xl font-semibold text-zinc-200">All games</h2>
+		</div>
+		<div class="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-4">
+			{#each games as game (game.id)}
 				<a
 					href="/play/{game.path}"
-					class="rounded-0 group block border-b-1 border-zinc-700 bg-transparent p-4 transition-all hover:border-blue-400"
+					class="rounded-0 group flex h-full flex-col border-b-1 border-zinc-700 bg-zinc-800 p-3 transition-all hover:border-blue-400"
 				>
-					<h3 class="mb-1 text-lg font-bold text-zinc-300 group-hover:text-blue-400">
+					<h3 class="mb-2 text-lg font-semibold text-zinc-200 group-hover:text-blue-400">
 						{game.displayName}
 					</h3>
+					{#if game.gameplayGif}
+						<div class="overflow-hidden border-1 border-zinc-700">
+							<img src={game.gameplayGif} alt="{game.displayName} gameplay" class="h-auto w-full" />
+						</div>
+					{/if}
+					<div class="mt-auto flex justify-end">
+						<button
+							class="mt-3 border-r-2 border-b-2 border-blue-800 bg-blue-400 px-6 py-1 font-bold text-zinc-950 hover:cursor-pointer"
+							>Play!</button
+						>
+					</div>
 				</a>
 			{/each}
+			<div
+				class="rounded-0 flex items-center justify-center border-b-1 border-zinc-700 bg-zinc-800 p-3"
+			>
+				<p class="text-center text-zinc-400">
+					More coming soon... <br /> <br /> You can also join the
+					<a
+						href="https://discord.gg/8s9NneBy"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-blue-400 underline transition-colors duration-200">Discord</a
+					> for game requests & more!
+				</p>
+			</div>
 		</div>
-	</Collapsible>
-</section>
+	</section>
 
-<section class="my-8">
-	<Collapsible title="Current rooms">
+	<section class="mb-8">
+		<div class="mb-3 border-b-1 border-zinc-700 pb-1">
+			<h2 class="text-xl font-semibold text-zinc-200">All rooms</h2>
+		</div>
 		{#if isLoadingRooms}
-			<div class="w-full p-8 text-center">
-				<p class="text-zinc-400"></p>
+			<div class="border-b-1 border-zinc-700 bg-zinc-800 p-8 text-center">
+				<p class="text-zinc-400">Loading rooms...</p>
 			</div>
 		{:else if errorLoadingRooms}
-			<div class="w-full p-8 text-center">
-				<p class="text-error-500">Error: {errorLoadingRooms}</p>
-				<button type="button" class="btn preset-outline mt-4" onclick={loadAllRooms}
-					>Try again</button
+			<div class="border-b-1 border-zinc-700 bg-zinc-800 p-8 text-center">
+				<p class="text-red-400">Error: {errorLoadingRooms}</p>
+				<button
+					type="button"
+					class="mt-4 border-r-2 border-b-2 border-blue-800 bg-blue-400 px-6 py-1 font-bold text-zinc-950 hover:cursor-pointer"
+					onclick={loadAllRooms}>Try again</button
 				>
 			</div>
 		{:else if allRooms.length > 0}
-			<div class="flex gap-4">
+			<div class="flex gap-3 overflow-x-auto">
 				{#each allRooms as room (room.id)}
 					<RoomCard {room} />
 				{/each}
 			</div>
 		{:else}
-			<div class="w-full p-8 text-center">
+			<div class="border-b-1 border-zinc-700 bg-zinc-800 p-8 text-center">
 				<p class="text-zinc-400">No public rooms available. Create one from a game page!</p>
 			</div>
 		{/if}
-	</Collapsible>
-</section>
+	</section>
+</div>

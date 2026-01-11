@@ -33,8 +33,6 @@ func RegisterGame(gameType string, factory Factory) {
 	}
 	_, registered := gameFactories[gameType]
 	if registered {
-		// Optional: you might want this to be a panic if it occurs during init.
-		// For now, we leave it as a log or a silent warning.
 		return
 	}
 	gameFactories[gameType] = factory
