@@ -1,0 +1,27 @@
+<script lang="ts">
+	import type { GameState } from '$lib/socketStore';
+
+	let { gameState, myTurn } = $props<{
+		gameState: GameState;
+		myTurn: boolean;
+	}>();
+</script>
+
+<div class="text-center text-3xl text-zinc-400">
+	<h3>
+		{#if !gameState}
+			Loading...
+		{:else if gameState.game.winner}
+			{#if gameState.game.winner === 'draw'}
+				It's a draw!
+			{:else if gameState.game.winner === 'R'}
+				{gameState.players[0]} wins as '<span class="text-red-400">R</span>'!
+			{:else if gameState.game.winner === 'B'}
+				{gameState.players[1]} wins as '<span class="text-blue-400">B</span>'!
+			{/if}
+		{:else}
+			{gameState.game.currentTurn === 0 ? `${gameState.players[0]}` : `${gameState.players[1]}`}'s
+			turn
+		{/if}
+	</h3>
+</div>

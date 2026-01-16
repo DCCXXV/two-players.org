@@ -93,6 +93,26 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
 			gameOver: '/sounds/gameOver.wav'
 		},
 		playerSymbols: ['P1', 'P2']
+	},
+	'connect-four': {
+		id: 'connect-four',
+		displayName: 'Connect Four',
+		path: 'connect-four',
+		description:
+			'Drop colored pieces into a 7x6 grid. Be the first to connect four of your discs in a row: horizontally, vertically, or diagonally!',
+		rules: [
+			'Drop a piece into any column that is not full',
+			'Pieces fall to the lowest available position',
+			'Connect four pieces in a row to win',
+			'Game ends in a draw if the board is full with no winner'
+		],
+		gameplayGif: 'https://placehold.co/400x400/18181b/71717a?text=No+Assets+Yet',
+		sounds: {
+			move1: '/sounds/move1.wav',
+			move2: '/sounds/move2.wav',
+			gameOver: '/sounds/gameOver.wav'
+		},
+		playerSymbols: ['R', 'B']
 	}
 };
 
